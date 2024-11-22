@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  @font-face {
+    font-family: "LeagueSpartan";
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url(../fonts/LeagueSpartan.woff2) format("woff2");
+  }
+
+  :root {
+    --background: 180 52% 96%; /* Light Grayish Cyan */
+    --foreground: 180 14% 20%; /* Very Dark Grayish Cyan */
+
+    --card: 180 52% 96%;
+    --card-foreground: 180 14% 20%;
+
+    --popover: 180 52% 96%;
+    --popover-foreground: 180 14% 20%;
+
+    --primary: 180 29% 50%; /* Desaturated Dark Cyan */
+    --primary-foreground: 0 0% 100%; /* White */
+
+    --secondary: 180 31% 95%; /* Light Grayish Cyan (Filter Tablets) */
+    --secondary-foreground: 180 14% 20%; /* Very Dark Grayish Cyan */
+
+    --muted: 180 31% 95%;
+    --muted-foreground: 180 8% 52%; /* Dark Grayish Cyan */
+
+    --accent: 180 31% 95%;
+    --accent-foreground: 180 14% 20%;
+
+    --destructive: 0 84% 63%; /* Slightly Desaturated Red */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 180 31% 95%;
+    --input: 180 31% 95%;
+    --ring: 180 29% 50%;
+    --radius: 0.25rem;
+
+    --bg-desktop-picture: url("../bg-header-desktop.svg");
+    --bg-mobile-picture: url("../bg-header-mobile.svg");
+  }
+
+  .dark {
+    --background: 180 14% 20%; /* Very Dark Grayish Cyan */
+    --foreground: 180 31% 95%; /* Light Grayish Cyan (Filter Tablets) */
+
+    --card: 180 14% 20%;
+    --card-foreground: 180 31% 95%;
+
+    --popover: 180 14% 20%;
+    --popover-foreground: 180 31% 95%;
+
+    --primary: 180 29% 50%; /* Desaturated Dark Cyan */
+    --primary-foreground: 0 0% 100%; /* White */
+
+    --secondary: 180 8% 52%; /* Dark Grayish Cyan */
+    --secondary-foreground: 180 52% 96%; /* Light Grayish Cyan */
+
+    --muted: 180 8% 52%;
+    --muted-foreground: 180 52% 96%;
+
+    --accent: 180 8% 52%;
+    --accent-foreground: 180 31% 95%;
+
+    --destructive: 0 62.8% 30.6%; /* Dark Red */
+    --destructive-foreground: 0 85.7% 97.3%;
+
+    --border: 180 8% 52%;
+    --input: 180 8% 52%;
+    --ring: 180 29% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
