@@ -1,12 +1,11 @@
 <script setup lang="ts">
 definePageMeta({
   pageTransition: {
-    name: "rotate",
+    mode: 'out-in'
   },
 });
 </script>
 
 <template>
-  <div>
-  </div>
+    <h1>data</h1>
 </template>
