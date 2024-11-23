@@ -6,7 +6,16 @@ const props = defineProps({
     type: Array<Job>,
     required: true,
   },
+
+  selectedTags: {
+    type: [Array<string>, null],
+    default: [],
+  },
 });
+
+const emit = defineEmits(["handleTag"]);
+
+const handleTag = (value: string) => emit("handleTag", value);
 </script>
 
 <template>
@@ -16,6 +25,6 @@ const props = defineProps({
     :index="index"
     :key="job.id"
   >
-    <JobItem :job="job" />
+    <JobItem :job="job" :tags="selectedTags" @add-tag="handleTag" />
   </li>
 </template>

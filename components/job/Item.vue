@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { computed } from "vue";
-
-import type { Job } from "@/lib/types";
-
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
-const props = defineProps<{ job: Job }>();
+const props = defineProps({
+  job: {
+    type: [Object],
+    required: true,
+  },
+  tags: {
+    type: [Array<string>],
+    default: [],
+  },
+});
 
 const images = import.meta.glob("assets/logos/*", { eager: true });
 
@@ -62,7 +68,13 @@ const logoSrc = computed(() => {
             :index="index"
           >
             <Button
-              class="mx-2 text-primary font-bold text-lg rounded hover:bg-primary hover:text-primary-foreground"
+              @click="$emit('addTag', langOrTool)"
+              :class="[
+                tags.includes(langOrTool)
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-primary',
+                'mx-2 font-bold text-lg rounded hover:bg-primary hover:text-primary-foreground',
+              ]"
               variant="outline"
             >
               {{ langOrTool }}
