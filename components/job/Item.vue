@@ -24,7 +24,7 @@ const logoSrc = computed(() => {
 
 <template>
   <ul
-    class="mb-1 mx-auto w-9/12 rounded shadow-xl bg-primary-foreground border-l-4 border-transparent hover:border-primary transition-colors duration-300"
+    class="mx-auto w-9/12 rounded shadow-xl bg-primary-foreground border-l-4 border-transparent hover:border-primary transition-colors duration-300"
   >
     <Card class="bg-primary-foreground py-3">
       <CardContent class="flex my-auto items-center">

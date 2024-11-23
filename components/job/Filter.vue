@@ -12,7 +12,7 @@ const props = defineProps({
 
 <template>
   <header
-    class="p-4 mx-auto mb-4 w-9/12 rounded shadow-lg bg-primary-foreground"
+    class="p-4 mx-auto w-9/12 rounded shadow-lg bg-primary-foreground"
   >
     <div class="flex px-6">
       <div
@@ -41,10 +41,10 @@ const props = defineProps({
       <Button
         @click="$emit('clearTags')"
         class="ml-auto font-black"
-        variant="link"
-      >
+        variant="link">
         Clear
-      </Button>
+        </Button
+      >
     </div>
   </header>
 </template>

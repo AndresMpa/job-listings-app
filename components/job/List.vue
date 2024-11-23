@@ -8,7 +8,7 @@ const props = defineProps({
   },
 
   selectedTags: {
-    type: [Array<string>, null],
+    type: [Array<string>],
     default: [],
   },
 });
@@ -20,7 +20,7 @@ const handleTag = (value: string) => emit("handleTag", value);
 
 <template>
   <li
-    class="list-none my-6 mt-10"
+    class="list-none my-6 mt-6"
     v-for="(job, index) in props.jobData"
     :index="index"
     :key="job.id"

@@ -42,7 +42,7 @@ const clearTags = () => (selectedTags.value = []);
         />
       </div>
     </transition>
-    <div v-if="data">
+    <div v-if="data" :class="selectedTags.length !== 0 ? 'mt-11' : 'mt-24'">
       <JobList
         :job-data="data"
         :selected-tags="selectedTags"
@@ -63,4 +63,3 @@ const clearTags = () => (selectedTags.value = []);
   opacity: 0;
 }
 </style>
-
