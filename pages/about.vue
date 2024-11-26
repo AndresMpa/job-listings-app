@@ -1,11 +1,11 @@
 <script setup lang="ts">
 definePageMeta({
   pageTransition: {
-    mode: 'out-in'
+    mode: "out-in",
   },
 });
 </script>
 
 <template>
-    <h1>data</h1>
+  <h1>About page</h1>
 </template>
