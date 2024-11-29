@@ -24,11 +24,17 @@ const logoSrc = computed(() => {
 
 <template>
   <ul
-    class="mx-auto w-9/12 rounded shadow-xl bg-primary-foreground border-l-4 border-transparent hover:border-primary transition-colors duration-300"
+    class="mx-auto my-12 md:my-0 w-9/12 rounded shadow-xl bg-primary-foreground border-l-4 border-transparent hover:border-primary transition-colors duration-300"
   >
     <Card class="bg-primary-foreground py-3">
-      <CardContent class="flex my-auto items-center">
-        <img class="mx-5" :src="logoSrc" :alt="props.job.company" />
+      <CardContent
+        class="flex flex-col md:flex-row my-auto items-start md:items-center"
+      >
+        <div class="relative">
+          <figure class="bottom-0 -right-7 absolute md:static">
+            <img class="mx-8 md:mx-5" :src="logoSrc" :alt="props.job.company" />
+          </figure>
+        </div>
 
         <div class="flex flex-col">
           <div class="flex flex-row">
@@ -46,7 +52,7 @@ const logoSrc = computed(() => {
             </div>
           </div>
 
-          <h2 class="mt-2 mb-0 text-2xl font-bold hover:text-primary">
+          <h2 class="mb-2 mt-2 text-2xl font-bold hover:text-primary">
             {{ props.job.position }}
           </h2>
 
@@ -59,7 +65,11 @@ const logoSrc = computed(() => {
           </p>
         </div>
 
-        <div class="flex ml-auto">
+        <div
+          class="block md:hidden w-full my-5 border-t-2 border-gray-200"
+        ></div>
+
+        <div class="flex md:ml-auto">
           <div
             v-for="(langOrTool, index) in props.job.languages.concat(
               props.job.tools

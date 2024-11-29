@@ -20,7 +20,7 @@ const handleTag = (value: string) => emit("handleTag", value);
 
 <template>
   <li
-    class="list-none my-6 mt-6"
+    class="list-none my-6"
     v-for="(job, index) in props.jobData"
     :index="index"
     :key="job.id"
