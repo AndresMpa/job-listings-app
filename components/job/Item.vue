@@ -24,7 +24,7 @@ const logoSrc = computed(() => {
 
 <template>
   <ul
-    class="mx-auto my-12 md:my-0 w-9/12 rounded shadow-xl bg-primary-foreground border-l-4 border-transparent hover:border-primary transition-colors duration-300"
+    class="mx-auto my-12 md:my-0 w-11/12 md:w-9/12 rounded shadow-xl bg-primary-foreground border-l-4 border-transparent hover:border-primary transition-colors duration-300"
   >
     <Card class="bg-primary-foreground py-3">
       <CardContent
@@ -69,27 +69,24 @@ const logoSrc = computed(() => {
           class="block md:hidden w-full my-5 border-t-2 border-gray-200"
         ></div>
 
-        <div class="flex md:ml-auto">
-          <div
+        <div class="block md:flex md:ml-auto">
+          <Button
             v-for="(langOrTool, index) in props.job.languages.concat(
               props.job.tools
             )"
             :key="langOrTool + index"
             :index="index"
-          >
-            <Button
-              @click="$emit('addTag', langOrTool)"
-              :class="[
-                tags.includes(langOrTool)
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-primary',
-                'mx-2 font-bold text-lg rounded hover:bg-primary hover:text-primary-foreground',
-              ]"
+            @click="$emit('addTag', langOrTool)"
+            :class="[
+              tags.includes(langOrTool)
+                ? 'bg-primary text-primary-foreground'
+                : 'text-primary',
+              'mx-2 font-bold text-lg rounded hover:bg-primary hover:text-primary-foreground',
+            ]"
               variant="outline"
             >
               {{ langOrTool }}
             </Button>
-          </div>
         </div>
       </CardContent>
     </Card>
