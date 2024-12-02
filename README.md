@@ -32,3 +32,4 @@ Job listing application though to work on your computer
 ## TODO
 
 - [ ] Fix mobile layout 
+- [ ] Update favicon
