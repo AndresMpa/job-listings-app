@@ -71,7 +71,10 @@ const logoSrc = computed(() => {
 
         <div class="block md:flex md:ml-auto">
           <Button
-            v-for="(langOrTool, index) in props.job.languages.concat(
+            v-for="(langOrTool, index) in [].concat(
+              props.job.role,
+              props.job.level,
+              props.job.languages,
               props.job.tools
             )"
             :key="langOrTool + index"
@@ -83,10 +86,10 @@ const logoSrc = computed(() => {
                 : 'text-primary',
               'mx-2 font-bold text-lg rounded hover:bg-primary hover:text-primary-foreground',
             ]"
-              variant="outline"
-            >
-              {{ langOrTool }}
-            </Button>
+            variant="outline"
+          >
+            {{ langOrTool }}
+          </Button>
         </div>
       </CardContent>
     </Card>
