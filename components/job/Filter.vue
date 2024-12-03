@@ -12,7 +12,7 @@ const props = defineProps({
 
 <template>
   <header
-    class="p-4 mx-auto w-9/12 rounded shadow-lg bg-primary-foreground"
+    class="p-4 mx-auto w-11/12 md:w-9/12 rounded shadow-lg bg-primary-foreground"
   >
     <div class="flex px-6">
       <div
