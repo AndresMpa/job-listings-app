@@ -14,37 +14,32 @@ const props = defineProps({
   <header
     class="p-4 mx-auto w-11/12 md:w-9/12 rounded shadow-lg bg-primary-foreground"
   >
-    <div class="flex px-6">
-      <div
-        class="flex flex-wrap overflow-x-hidden"
-        v-for="(item, index) in props.selectedTags"
-        :key="index"
-      >
+    <div class="flex place-items-center justify-between px-1 md:px-6">
+      <div class="overflow-x-hidden">
         <Button
-          class="px-2 rounded-l text-primary font-bold text-lg hover:text-primary"
           variant="outline"
+          class="my-2 px-0 mr-4 rounded-r bg-secondary hover:text-primary"
+          v-for="(item, index) in props.selectedTags"
+          :key="index"
         >
-          {{ item }}
-        </Button>
-        <Button
-          class="px-2 mr-4 rounded-r bg-primary hover:bg-foreground hover:text-primary"
-          variant="outline"
-          @click="$emit('removeTag', item)"
-        >
-          <Icon
-            icon="radix-icons:cross-1"
-            class="text-primary-foreground text-lg font-black"
-          />
+          <span class="px-2 text-primary font-bold text-lg hover:text-primary">
+            {{ item }}
+          </span>
+          <Button
+            class="px-2 bg-primary hover:bg-foreground"
+            @click="$emit('removeTag', item)"
+          >
+            <Icon
+              class="text-primary-foreground text-lg font-black"
+              icon="radix-icons:cross-1"
+            />
+          </Button>
         </Button>
       </div>
 
-      <Button
-        @click="$emit('clearTags')"
-        class="ml-auto font-black"
-        variant="link">
+      <Button @click="$emit('clearTags')" class="font-black" variant="link">
         Clear
-        </Button
-      >
+      </Button>
     </div>
   </header>
 </template>
