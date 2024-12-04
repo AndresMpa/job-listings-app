@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+
+import { getImagePath } from "~/lib/images";
 
 const props = defineProps({
   job: {
@@ -13,26 +14,25 @@ const props = defineProps({
     default: [],
   },
 });
-
-const images = import.meta.glob("assets/logos/*", { eager: true });
-
-const logoSrc = computed(() => {
-  const path = `/assets/logos/${props.job.logo}`;
-  return (images[path] as any)?.default || "";
-});
 </script>
 
 <template>
   <ul
-    class="mx-auto my-12 md:my-0 w-11/12 md:w-9/12 rounded shadow-xl bg-primary-foreground border-l-4 border-transparent hover:border-primary transition-colors duration-300"
+    class="mx-auto my-12 md:my-0 w-11/12 md:w-9/12 rounded shadow-xl bg-primary-foreground"
   >
-    <Card class="bg-primary-foreground py-3">
+    <Card
+      class="bg-primary-foreground py-3 border-l-[5px] border-transparent hover:border-primary transition-colors duration-300"
+    >
       <CardContent
         class="flex flex-col md:flex-row my-auto items-start md:items-center"
       >
         <div class="relative">
           <figure class="bottom-0 -right-7 absolute md:static">
-            <img class="mx-8 md:mx-5" :src="logoSrc" :alt="props.job.company" />
+            <img
+              class="mx-8 md:mx-5"
+              :src="getImagePath(props.job.logo)"
+              :alt="props.job.company"
+            />
           </figure>
         </div>
 
@@ -84,7 +84,7 @@ const logoSrc = computed(() => {
               tags.includes(langOrTool)
                 ? 'bg-primary text-primary-foreground'
                 : 'text-primary',
-              'mx-2 font-bold text-lg rounded hover:bg-primary hover:text-primary-foreground',
+              'my-2 mx-2 font-bold text-lg rounded hover:bg-primary hover:text-primary-foreground',
             ]"
             variant="outline"
           >
