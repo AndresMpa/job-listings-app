@@ -13,4 +13,12 @@ export default defineNuxtConfig({
     "/jobs": { ssr: false },
     "/about": { ssr: true, redirect: "/jobs" },
   },
+  typescript: {
+    typeCheck: true,
+  },
+  colorMode: {
+    classSuffix: "",
+    preference: "dark",
+    fallback: "dark",
+  },
 });
