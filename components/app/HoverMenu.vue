@@ -16,24 +16,26 @@ import { Icon } from "@iconify/vue";
 <template>
   <Sheet>
     <SheetTrigger as-child>
-      <Button variant="ghost">
-        <Icon
-          icon="radix-icons:hamburger-menu"
-          class="text-primary-foreground rotate-0 scale-100 transition-all"
-        />
-      </Button>
+      <div class="flex justify-end">
+        <Button class="hover:bg-inherit" variant="ghost">
+          <Icon
+            icon="radix-icons:hamburger-menu"
+            class="text-primary-foreground rotate-0 scale-100 transition-all"
+          />
+        </Button>
+      </div>
     </SheetTrigger>
-    <SheetContent>
+    <SheetContent :side="'right'">
       <SheetHeader>
         <SheetTitle>Edit profile</SheetTitle>
         <SheetDescription>
           Make changes to your profile here. Click save when you're done.
         </SheetDescription>
       </SheetHeader>
-      <slot></slot>
+      <slot />
       <SheetFooter>
         <SheetClose as-child>
-          <Button> Save changes </Button>
+          <Button>Close</Button>
         </SheetClose>
       </SheetFooter>
     </SheetContent>
