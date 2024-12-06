@@ -56,7 +56,7 @@
     --popover-foreground: 180 31% 95%;
 
     --primary: 180 29% 50%; /* Desaturated Dark Cyan */
-    --primary-foreground: 0 0% 100%; /* White */
+    --primary-foreground: 0 0% 25%; /* White */
 
     --secondary: 180 8% 52%; /* Dark Grayish Cyan */
     --secondary-foreground: 180 52% 96%; /* Light Grayish Cyan */
