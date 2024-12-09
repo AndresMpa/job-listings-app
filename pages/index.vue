@@ -7,5 +7,7 @@ definePageMeta({
 </script>
 
 <template>
-  <h1>Index</h1>
+  <h1>
+    {{ $t("title") }}
+  </h1>
 </template>

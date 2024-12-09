@@ -25,23 +25,16 @@ const clearTags = () => (selectedTags.value = []);
 
 <template>
   <div class="relative h-40 pt-32">
-    <transition
-      name="fade"
-      @enter="enter"
-      @leave="leave"
-      @before-enter="beforeEnter"
+    <div
+      v-if="selectedTags.length !== 0"
+      class="transition-opacity duration-500 ease-in-out"
     >
-      <div
-        v-if="selectedTags.length !== 0"
-        class="transition-opacity duration-500 ease-in-out"
-      >
-        <JobFilter
-          @remove-tag="handleTag"
-          @clear-tags="clearTags"
-          :selected-tags="selectedTags"
-        />
-      </div>
-    </transition>
+      <JobFilter
+        @remove-tag="handleTag"
+        @clear-tags="clearTags"
+        :selected-tags="selectedTags"
+      />
+    </div>
     <div v-if="data" :class="selectedTags.length !== 0 ? 'mt-11' : 'mt-24'">
       <JobList
         :job-data="data"
@@ -51,15 +44,3 @@ const clearTags = () => (selectedTags.value = []);
     </div>
   </div>
 </template>
-
-<style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  @apply transition-opacity duration-500 ease-in-out;
-}
-
-.fade-enter,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>
