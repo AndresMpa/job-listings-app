@@ -33,3 +33,4 @@ Job listing application though to work on your computer
 
 - [ ] Fix mobile layout 
 - [ ] Update favicon
+- [ ] Try v18n
