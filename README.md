@@ -25,7 +25,7 @@
     </a>
   </p>
 
-Job listing application though to work on your computer
+A job listing application though to work on your computer
 
 </div>
 
