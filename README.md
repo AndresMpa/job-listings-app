@@ -31,6 +31,6 @@ A job listing application though to work on your computer
 
 ## TODO
 
-- [ ] Fix mobile layout 
+- [ ] Fix mobile layout
 - [ ] Update favicon
 - [ ] Try v18n
