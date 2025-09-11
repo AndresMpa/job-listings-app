@@ -9,7 +9,7 @@ import {
 import { Icon } from "@iconify/vue";
 import { useI18n } from "vue-i18n";
 
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 
 function changeLang(lang: "en" | "es") {
   locale.value = lang;
@@ -29,7 +29,7 @@ function changeLang(lang: "en" | "es") {
           class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
         />
         <span class="sr-only">
-          <p>{{ $t("welcome") }}</p>
+          <p>{{ t("welcome") }}</p>
         </span>
       </Button>
     </DropdownMenuTrigger>
