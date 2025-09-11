@@ -8,6 +8,25 @@ export default defineNuxtConfig({
     "@nuxtjs/color-mode",
     "@nuxtjs/i18n",
   ],
+  i18n: {
+    strategy: "prefix_except_default",
+    defaultLocale: "en",
+    locales: [
+      {
+        code: "en",
+        iso: "en-US",
+        name: "English",
+        file: "en.json",
+      },
+      {
+        code: "es",
+        iso: "es-ES",
+        name: "Español",
+        file: "es.json",
+      },
+    ],
+    langDir: "locales/",
+  },
   routeRules: {
     "/": { prerender: true, redirect: "/jobs" },
     "/jobs": { ssr: false },

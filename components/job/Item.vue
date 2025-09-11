@@ -17,7 +17,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <ul
+  <li
     class="mx-auto my-12 md:my-0 w-11/12 md:w-9/12 rounded shadow-xl bg-primary-foreground"
   >
     <Card
@@ -93,5 +93,5 @@ const props = defineProps({
         </div>
       </CardContent>
     </Card>
-  </ul>
+  </li>
 </template>

@@ -7,8 +7,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Icon } from "@iconify/vue";
+import { useI18n } from "vue-i18n";
 
-const { setLocale } = useI18n();
+const { locale } = useI18n();
+
+function changeLang(lang: "en" | "es") {
+  locale.value = lang;
+}
 </script>
 
 <template>
@@ -29,8 +34,8 @@ const { setLocale } = useI18n();
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end">
-      <DropdownMenuItem @click="setLocale('en')"> English </DropdownMenuItem>
-      <DropdownMenuItem @click="setLocale('es')"> Español </DropdownMenuItem>
+      <DropdownMenuItem @click="changeLang('en')">English</DropdownMenuItem>
+      <DropdownMenuItem @click="changeLang('es')">Español</DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>
 </template>

@@ -1,6 +1,11 @@
 <script setup lang="ts">
 useHead({
   titleTemplate: "Job Listing App %s",
+  meta: [{ name: "description", content: "Simple job listing app" }],
+  htmlAttrs: {
+    lang: "en",
+  },
+  link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
 });
 </script>
 

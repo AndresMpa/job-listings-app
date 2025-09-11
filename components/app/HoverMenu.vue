@@ -16,8 +16,8 @@ import { Icon } from "@iconify/vue";
 <template>
   <Sheet>
     <SheetTrigger as-child>
-      <div class="flex justify-end">
-        <Button class="hover:bg-inherit" variant="ghost">
+      <div class="flex justify-end" aria-labelledby="menuButton" role="button">
+        <Button id="menuButton" aria-label="Menu" class="hover:bg-inherit" variant="ghost">
           <Icon
             icon="radix-icons:hamburger-menu"
             class="text-primary-foreground rotate-0 scale-100 transition-all"
