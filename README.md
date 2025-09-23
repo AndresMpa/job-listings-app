@@ -33,4 +33,3 @@ A job listing application though to work on your computer
 
 - [ ] Fix mobile layout
 - [ ] Update favicon (Check inject)
-- [ ] Try v18n for internationalization 
