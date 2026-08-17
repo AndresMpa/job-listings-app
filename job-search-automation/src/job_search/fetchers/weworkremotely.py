@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import requests
 
-from ..config import AppConfig
+from ..config import AppConfig, KeywordsConfig
 from ..models import JobListing
 from .base import DEFAULT_TIMEOUT, fetch_rss_items, is_senior, report, rss_text, split_title_and_company
 
@@ -12,7 +12,7 @@ NAME = "WeWorkRemotely"
 FEED_URL = "https://weworkremotely.com/categories/{category}.rss"
 
 
-def fetch(cfg: AppConfig) -> list[JobListing]:
+def fetch(cfg: AppConfig, prefilter: KeywordsConfig) -> list[JobListing]:
     jobs: list[JobListing] = []
     for category in cfg.weworkremotely.categories:
         try:
@@ -22,7 +22,7 @@ def fetch(cfg: AppConfig) -> list[JobListing]:
 
         for item in items:
             raw_title = rss_text(item, "title")
-            if not raw_title or not is_senior(raw_title, cfg):
+            if not raw_title or not is_senior(raw_title, prefilter):
                 continue
             title, company = split_title_and_company(raw_title)
             jobs.append(

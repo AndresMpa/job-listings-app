@@ -1,8 +1,13 @@
 # ---------------------------------------------------------------------------
-# job-search-automation configuration
+# job-search-automation SYSTEM configuration
 #
-# Copy this file to config.yaml and edit it — config.yaml is gitignored so
-# your profile/keywords stay local. See README.md for the full field list.
+# Copy this file to config.yaml and edit it — config.yaml is gitignored.
+# This file only holds settings that apply to every run (Ollama connection,
+# which providers are on, scoring weights, the database).
+#
+# It does NOT hold who you're searching jobs for anymore — that lives in
+# profiles/<name>.yaml, one file per person/role. See
+# profiles/profile.yaml.example. See README.md for the full field list.
 # ---------------------------------------------------------------------------
 
 # Local LLM used to score and draft outreach for each listing.
@@ -13,116 +18,13 @@ ollama:
   model: qwen2.5:14b
   timeout: 300 # seconds
 
-# Free-text profile injected into every LLM prompt. Write it as you'd want
-# an interviewer to read it.
-profile: |
-  Senior AI Infrastructure Engineer with 10+ years of experience.
-  Stack: Python, FastAPI, Django, Vue.js, PostgreSQL, Docker, AWS, Linux.
-  Experience in AI Infrastructure, RAG, LLMs, agents.
-  Flagship project: an open-source AI assistant for Linux.
-  Based in Colombia, available for US timezones (EST/PST).
-  Looking for senior remote roles with competitive compensation.
-
-# Keyword lists used by the (cheap, pre-LLM) filtering stage.
-keywords:
-  # A listing must contain at least one of these to be considered at all.
-  target:
-    - ai engineer
-    - machine learning
-    - llm
-    - rag
-    - agent
-    - prompt engineering
-    - ai infrastructure
-    - ai platform
-    - generative ai
-    - genai
-    - ml engineer
-    - python
-    - fastapi
-    - django
-    - vue
-    - vuejs
-    - postgresql
-    - linux
-    - docker
-    - kubernetes
-    - aws
-    - senior
-    - lead
-    - staff
-    - principal
-    - architect
-    - fullstack
-    - backend
-    - infrastructure
-
-  # A listing containing any of these is dropped, no matter what else matches.
-  exclude:
-    - junior
-    - intern
-    - internship
-    - entry level
-    - trainee
-    - fresher
-    - graduate
-    - analyst
-    - volunteer
-    - unpaid
-    - contractor
-    - housekeeper
-    - cleaner
-    - driver
-    - manager
-    - director
-    - officer
-    - specialist
-    - coordinator
-    - administrator
-
-  # Used to detect seniority in a title (drives per-provider pre-filtering).
-  seniority:
-    - senior
-    - lead
-    - staff
-    - principal
-
-  # Used to detect AI-related postings (drives per-provider pre-filtering).
-  ai:
-    - ai
-    - machine learning
-    - llm
-    - rag
-    - agent
-
-  # A listing must match at least one of these to count as "technical".
-  tech:
-    - software
-    - developer
-    - engineer
-    - architect
-    - python
-    - django
-    - vue
-    - react
-    - javascript
-    - backend
-    - frontend
-    - fullstack
-    - infrastructure
-    - ai
-    - machine learning
-    - llm
-    - rag
-    - agent
-
 # Enable/disable individual providers without touching any code.
 providers:
   remoteok: true
   remotive: true
   weworkremotely: true
   python_jobs: true
-  vuejobs: true
+  vuejobs: false
   hackernews: true
   arbeitnow: true
 
@@ -135,20 +37,20 @@ weworkremotely:
     - remote-devops-sysadmin-jobs
 
 # How listings are scored (0-10) and which ones make it into the reports.
+# Applies the same way to every profile.
 scoring:
   min_score_to_keep: 6
   fit_weight: 0.4 # score = fit * fit_weight + income * income_weight
   income_weight: 0.6
 
-# Where reports are written.
-output:
-  dir: .
-  csv_filename: job_matches.csv
-  md_filename: job_matches.md
+# Base directory for per-profile reports: each profile's CSV/Markdown are
+# written to <output_base_dir>/<profile-name>/.
+output_base_dir: profiles/output
 
 # Postgres connection used to persist scored listings (consumed by the
 # job-listings-app frontend through the API). Leave empty to disable the
-# database and only write CSV/Markdown.
+# database and only write CSV/Markdown. Rows are keyed by (profile, url),
+# so the same listing can be scored independently for each profile.
 # Overridable at runtime with the DATABASE_URL env var.
 database:
   url: postgresql+psycopg://jobs:jobs@localhost:5432/jobs

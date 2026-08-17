@@ -8,8 +8,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY main.py .
 COPY src/ ./src/
 
-# config.yaml and the output dir are meant to be bind-mounted at runtime,
-# not baked into the image.
+# config.yaml and profiles/ (which includes profiles/output/) are meant to
+# be bind-mounted at runtime, not baked into the image.
 #
 # Two entrypoints share this image (picked in docker-compose.yml):
 #   - `python main.py`                                    -> one-off scan

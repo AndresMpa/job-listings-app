@@ -87,9 +87,9 @@ class OllamaClient:
             print(f"  Ollama error: {exc}")
             return ""
 
-    def score_job(self, job: JobListing) -> None:
+    def score_job(self, job: JobListing, profile_text: str) -> None:
         prompt = SCORE_PROMPT.format(
-            profile=self.cfg.profile,
+            profile=profile_text,
             title=job.title,
             company=job.company,
             location=job.location,
@@ -117,6 +117,6 @@ class OllamaClient:
             job.fit_score = job.income_score = job.score = 0
             job.reasoning = "Error"
 
-    def draft_outreach(self, job: JobListing) -> None:
-        prompt = OUTREACH_PROMPT.format(profile=self.cfg.profile, title=job.title, company=job.company)
+    def draft_outreach(self, job: JobListing, profile_text: str) -> None:
+        prompt = OUTREACH_PROMPT.format(profile=profile_text, title=job.title, company=job.company)
         job.outreach_draft = self._generate(prompt)

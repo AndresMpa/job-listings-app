@@ -17,20 +17,14 @@ interface Job {
   outreachDraft: string | null;
 }
 
-// Mirrors AppConfig.to_dict() from job-search-automation (see ../job-search-automation/src/job_search/config.py)
+// Mirrors AppConfig.to_dict() from job-search-automation (see
+// ../job-search-automation/src/job_search/config.py). System-wide settings
+// only — candidate data now lives in ProfileSettings, one per person.
 interface AppSettings {
-  profile: string;
   ollama: {
     url: string;
     model: string;
     timeout: number;
-  };
-  keywords: {
-    target: string[];
-    exclude: string[];
-    seniority: string[];
-    ai: string[];
-    tech: string[];
   };
   providers: {
     remoteok: boolean;
@@ -49,14 +43,32 @@ interface AppSettings {
     fit_weight: number;
     income_weight: number;
   };
-  output: {
-    dir: string;
-    csv_filename: string;
-    md_filename: string;
-  };
+  output_base_dir: string;
   database: {
     url: string;
   };
 }
 
-export type { Job, AppSettings };
+// Mirrors ProfileConfig.to_dict() from job-search-automation. One entry per
+// person/role being searched for (profiles/<name>.yaml).
+interface ProfileSettings {
+  name: string;
+  profile: string;
+  keywords: {
+    target: string[];
+    exclude: string[];
+    seniority: string[];
+    ai: string[];
+    tech: string[];
+  };
+  output: {
+    csv_filename: string;
+    md_filename: string;
+  };
+  telegram: {
+    enabled: boolean;
+    chat_id: string | null;
+  };
+}
+
+export type { Job, AppSettings, ProfileSettings };

@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 
 import requests
 
-from ..config import AppConfig
+from ..config import KeywordsConfig
 from ..models import JobListing
 
 DEFAULT_TIMEOUT = 15
@@ -22,12 +22,12 @@ def matches_any(text: str, keywords: list[str]) -> bool:
     return any(kw in text for kw in keywords)
 
 
-def is_senior(title: str, cfg: AppConfig) -> bool:
-    return matches_any(title.lower(), cfg.keywords.seniority)
+def is_senior(title: str, prefilter: KeywordsConfig) -> bool:
+    return matches_any(title.lower(), prefilter.seniority)
 
 
-def is_ai_related(title: str, cfg: AppConfig) -> bool:
-    return matches_any(title.lower(), cfg.keywords.ai)
+def is_ai_related(title: str, prefilter: KeywordsConfig) -> bool:
+    return matches_any(title.lower(), prefilter.ai)
 
 
 def split_title_and_company(raw_title: str) -> tuple[str, str]:

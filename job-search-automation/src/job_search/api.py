@@ -1,11 +1,13 @@
 """HTTP API for job-search-automation.
 
-Two responsibilities, deliberately kept in one small file since neither is
-big enough to justify its own module:
+Responsibilities:
 
-- GET /jobs            -> reads scored listings from Postgres (for the frontend)
-- GET/PUT /config      -> reads/writes config.yaml (for the /settings panel)
-- POST /run            -> triggers a pipeline run in the background
+- GET /jobs                  -> reads scored listings from Postgres, optionally per profile
+- GET/PUT /config             -> reads/writes config.yaml, the *system* settings
+- GET /profiles                -> lists candidate profiles (profiles/*.yaml)
+- GET/PUT/DELETE /profiles/{name} -> reads/writes/removes a single profile
+- POST /run                    -> triggers a pipeline run in the background,
+                                    for one profile or every profile
 
 Run with: uvicorn job_search.api:app --host 0.0.0.0 --port 8000
 """
@@ -22,12 +24,23 @@ from pydantic import BaseModel
 
 from . import db
 from .cli import run as run_pipeline
-from .config import config_from_dict, load_config, save_config
-from .reports import write_csv_report, write_markdown_report
+from .cli import write_reports
+from .config import (
+    DEFAULT_PROFILES_DIR,
+    config_from_dict,
+    list_profile_paths,
+    load_config,
+    load_profile,
+    load_profiles,
+    profile_from_dict,
+    save_config,
+    save_profile,
+)
 
 CONFIG_PATH = Path("config.yaml")
+PROFILES_DIR = DEFAULT_PROFILES_DIR
 
-app = FastAPI(title="job-search-automation API", version="1.0.0")
+app = FastAPI(title="job-search-automation API", version="2.0.0")
 
 # The Nuxt app calls this from its own server routes (not the browser), but
 # CORS is opened up for convenience when calling the API directly too.
@@ -45,6 +58,7 @@ app.add_middleware(
 
 class JobOut(BaseModel):
     id: int
+    profile: str
     source: str
     title: str
     company: str
@@ -69,16 +83,16 @@ def health() -> dict[str, str]:
 
 
 @app.get("/jobs", response_model=list[JobOut])
-def list_jobs(min_score: int | None = None, limit: int = 200, offset: int = 0):
+def list_jobs(profile: str | None = None, min_score: int | None = None, limit: int = 200, offset: int = 0):
     cfg = load_config(CONFIG_PATH)
     if not cfg.database.url:
         raise HTTPException(500, "database.url is not configured")
-    records = db.fetch_jobs(cfg.database, min_score=min_score, limit=limit, offset=offset)
+    records = db.fetch_jobs(cfg.database, profile=profile, min_score=min_score, limit=limit, offset=offset)
     return records
 
 
 # ---------------------------------------------------------------------------
-# Settings (config.yaml)
+# Settings (config.yaml) — system-wide, not tied to any profile
 # ---------------------------------------------------------------------------
 
 @app.get("/config")
@@ -98,31 +112,89 @@ def update_config(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# Profiles (profiles/<name>.yaml) — one entry per person/role being searched for
+# ---------------------------------------------------------------------------
+
+@app.get("/profiles")
+def list_profiles() -> list[dict[str, Any]]:
+    profiles = []
+    for path in list_profile_paths(PROFILES_DIR):
+        try:
+            profiles.append(load_profile(path).to_dict())
+        except (OSError, ValueError) as exc:
+            raise HTTPException(500, f"Could not read profile {path.name}: {exc}") from exc
+    return profiles
+
+
+@app.get("/profiles/{name}")
+def get_profile(name: str) -> dict[str, Any]:
+    path = PROFILES_DIR / f"{name}.yaml"
+    if not path.exists():
+        raise HTTPException(404, f"Profile '{name}' not found")
+    return load_profile(path).to_dict()
+
+
+@app.put("/profiles/{name}")
+def update_profile(name: str, payload: dict[str, Any]) -> dict[str, Any]:
+    """Create or replace profiles/<name>.yaml. Validated via ProfileConfig."""
+    payload = {**payload, "name": name}
+    try:
+        profile = profile_from_dict(name, payload)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(400, f"Invalid profile: {exc}") from exc
+    save_profile(profile, PROFILES_DIR)
+    return profile.to_dict()
+
+
+@app.delete("/profiles/{name}")
+def delete_profile(name: str) -> dict[str, str]:
+    path = PROFILES_DIR / f"{name}.yaml"
+    if not path.exists():
+        raise HTTPException(404, f"Profile '{name}' not found")
+    path.unlink()
+    return {"status": "deleted", "name": name}
+
+
+# ---------------------------------------------------------------------------
 # Manual trigger
 # ---------------------------------------------------------------------------
 
 _run_lock = asyncio.Lock()
 
 
-def _run_and_persist() -> None:
+def _load_run_profiles(profile_names: list[str] | None):
+    if profile_names:
+        return [load_profile(PROFILES_DIR / f"{name}.yaml") for name in profile_names]
+    return load_profiles(PROFILES_DIR)
+
+
+def _run_and_persist(profiles) -> None:
     cfg = load_config(CONFIG_PATH)
-    kept = run_pipeline(cfg)
-    if not kept:
-        return
-    write_csv_report(kept, cfg.output.csv_path)
-    write_markdown_report(kept, cfg.output.md_path)
-    if cfg.database.url:
-        db.save_jobs(kept, cfg.database)
+    results = run_pipeline(cfg, profiles)
+    for profile in profiles:
+        kept = results.get(profile.name, [])
+        if not kept:
+            continue
+        write_reports(cfg, profile, kept)
+        if cfg.database.url:
+            db.save_jobs(kept, cfg.database, profile.name)
 
 
 @app.post("/run")
-async def trigger_run(background_tasks: BackgroundTasks) -> dict[str, str]:
+async def trigger_run(background_tasks: BackgroundTasks, profile: str | None = None) -> dict[str, str]:
+    """Runs the pipeline for a single profile (?profile=name) or every profile."""
     if _run_lock.locked():
         raise HTTPException(409, "A run is already in progress")
 
+    profile_names = [profile] if profile else None
+    try:
+        profiles = _load_run_profiles(profile_names)
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc)) from exc
+
     async def _guarded_run() -> None:
         async with _run_lock:
-            await asyncio.to_thread(_run_and_persist)
+            await asyncio.to_thread(_run_and_persist, profiles)
 
     background_tasks.add_task(_guarded_run)
-    return {"status": "started"}
+    return {"status": "started", "profiles": profile_names or "all"}

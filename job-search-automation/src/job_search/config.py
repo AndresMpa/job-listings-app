@@ -1,8 +1,13 @@
-"""Loads and validates config.yaml into typed, immutable config objects.
+"""Loads and validates config.yaml (system) and profiles/*.yaml (candidates).
 
-Every tunable that used to be a module-level constant in the original
-single-file script now lives in config.yaml. See config.yaml.example
-for the documented defaults.
+config.yaml holds settings that apply to every run: Ollama connection,
+which providers are enabled, scoring weights, the database URL. It has
+nothing to do with *who* you're searching jobs for.
+
+profiles/*.yaml hold the "who": the free-text candidate profile and the
+keyword lists used to filter listings. Each file is one person/role you
+want to search for; a run walks every profile in profiles/ (or just the
+one passed with --profile) against the same fetched listings.
 """
 
 from __future__ import annotations
@@ -16,6 +21,8 @@ from typing import Any
 import yaml
 
 DEFAULT_CONFIG_PATH = Path("config.yaml")
+DEFAULT_PROFILES_DIR = Path("profiles")
+DEFAULT_OUTPUT_BASE_DIR = Path("profiles/output")
 
 
 def _detect_ollama_url() -> str:
@@ -38,11 +45,24 @@ class OllamaConfig:
 
 @dataclass(frozen=True)
 class KeywordsConfig:
+    """Keyword lists used by the (cheap, pre-LLM) filtering stage. Per-profile."""
+
     target: list[str] = field(default_factory=list)
     exclude: list[str] = field(default_factory=list)
     seniority: list[str] = field(default_factory=list)
     ai: list[str] = field(default_factory=list)
     tech: list[str] = field(default_factory=list)
+
+    def merge(self, other: "KeywordsConfig") -> "KeywordsConfig":
+        """Union with another KeywordsConfig, de-duplicated. Used to build a
+        single cheap prefilter that covers every loaded profile at fetch time."""
+        return KeywordsConfig(
+            target=sorted(set(self.target) | set(other.target)),
+            exclude=sorted(set(self.exclude) | set(other.exclude)),
+            seniority=sorted(set(self.seniority) | set(other.seniority)),
+            ai=sorted(set(self.ai) | set(other.ai)),
+            tech=sorted(set(self.tech) | set(other.tech)),
+        )
 
 
 @dataclass(frozen=True)
@@ -69,21 +89,6 @@ class ScoringConfig:
 
 
 @dataclass(frozen=True)
-class OutputConfig:
-    dir: str = "."
-    csv_filename: str = "job_matches.csv"
-    md_filename: str = "job_matches.md"
-
-    @property
-    def csv_path(self) -> Path:
-        return Path(self.dir) / self.csv_filename
-
-    @property
-    def md_path(self) -> Path:
-        return Path(self.dir) / self.md_filename
-
-
-@dataclass(frozen=True)
 class DatabaseConfig:
     # Standard SQLAlchemy URL, e.g. postgresql+psycopg://user:pass@host:5432/jobs
     # Overridable at runtime with the DATABASE_URL env var (handy in Docker
@@ -94,18 +99,58 @@ class DatabaseConfig:
 
 @dataclass(frozen=True)
 class AppConfig:
-    profile: str
+    """System-wide settings, loaded from config.yaml. No candidate data lives
+    here anymore — see ProfileConfig / profiles/*.yaml for that."""
+
     ollama: OllamaConfig = field(default_factory=OllamaConfig)
-    keywords: KeywordsConfig = field(default_factory=KeywordsConfig)
     providers: ProvidersConfig = field(default_factory=ProvidersConfig)
     weworkremotely: WeWorkRemotelyConfig = field(default_factory=WeWorkRemotelyConfig)
     scoring: ScoringConfig = field(default_factory=ScoringConfig)
-    output: OutputConfig = field(default_factory=OutputConfig)
     database: DatabaseConfig = field(default_factory=DatabaseConfig)
+    output_base_dir: str = str(DEFAULT_OUTPUT_BASE_DIR)
 
     def to_dict(self) -> dict[str, Any]:
         """JSON/YAML-serializable view, used by the settings API and save_config()."""
         return asdict(self)
+
+
+@dataclass(frozen=True)
+class TelegramConfig:
+    """Reserved for future work: sending each profile's digest via Telegram.
+    Not used yet — just keeps the schema stable so profiles don't need to be
+    rewritten once that lands."""
+
+    chat_id: str | None = None
+    enabled: bool = False
+
+
+@dataclass(frozen=True)
+class ProfileOutputConfig:
+    csv_filename: str = "job_matches.csv"
+    md_filename: str = "job_matches.md"
+
+
+@dataclass(frozen=True)
+class ProfileConfig:
+    """One person/role to search jobs for. Lives in profiles/<name>.yaml."""
+
+    name: str
+    profile: str
+    keywords: KeywordsConfig = field(default_factory=KeywordsConfig)
+    output: ProfileOutputConfig = field(default_factory=ProfileOutputConfig)
+    telegram: TelegramConfig = field(default_factory=TelegramConfig)
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    def output_dir(self, base_dir: str | Path = DEFAULT_OUTPUT_BASE_DIR) -> Path:
+        return Path(base_dir) / self.name
+
+    def csv_path(self, base_dir: str | Path = DEFAULT_OUTPUT_BASE_DIR) -> Path:
+        return self.output_dir(base_dir) / self.output.csv_filename
+
+    def md_path(self, base_dir: str | Path = DEFAULT_OUTPUT_BASE_DIR) -> Path:
+        return self.output_dir(base_dir) / self.output.md_filename
 
 
 def _section(raw: dict[str, Any], key: str, cls):
@@ -127,14 +172,12 @@ def config_from_dict(raw: dict[str, Any]) -> AppConfig:
     database = DatabaseConfig(url=os.environ.get("DATABASE_URL") or database_raw.get("url", ""))
 
     return AppConfig(
-        profile=raw.get("profile", "").strip(),
         ollama=ollama,
-        keywords=_section(raw, "keywords", KeywordsConfig),
         providers=_section(raw, "providers", ProvidersConfig),
         weworkremotely=_section(raw, "weworkremotely", WeWorkRemotelyConfig),
         scoring=_section(raw, "scoring", ScoringConfig),
-        output=_section(raw, "output", OutputConfig),
         database=database,
+        output_base_dir=raw.get("output_base_dir", str(DEFAULT_OUTPUT_BASE_DIR)),
     )
 
 
@@ -153,3 +196,58 @@ def save_config(cfg: AppConfig, path: str | Path = DEFAULT_CONFIG_PATH) -> None:
     """Persist an AppConfig back to config.yaml (used by the settings API)."""
     path = Path(path)
     path.write_text(yaml.safe_dump(cfg.to_dict(), sort_keys=False, allow_unicode=True), encoding="utf-8")
+
+
+def profile_from_dict(name: str, raw: dict[str, Any]) -> ProfileConfig:
+    telegram_raw = raw.get("telegram", {}) or {}
+    return ProfileConfig(
+        name=name,
+        profile=(raw.get("profile", "") or "").strip(),
+        keywords=_section(raw, "keywords", KeywordsConfig),
+        output=_section(raw, "output", ProfileOutputConfig),
+        telegram=TelegramConfig(
+            chat_id=telegram_raw.get("chat_id"),
+            enabled=bool(telegram_raw.get("enabled", False)),
+        ),
+    )
+
+
+def load_profile(path: str | Path) -> ProfileConfig:
+    """Read a single profiles/<name>.yaml file."""
+    path = Path(path)
+    if not path.exists():
+        raise FileNotFoundError(f"{path} not found.")
+    raw: dict[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    name = raw.get("name") or path.stem
+    return profile_from_dict(name, raw)
+
+
+def save_profile(profile: ProfileConfig, dir_path: str | Path = DEFAULT_PROFILES_DIR) -> Path:
+    """Persist a ProfileConfig to profiles/<name>.yaml. Returns the written path."""
+    dir_path = Path(dir_path)
+    dir_path.mkdir(parents=True, exist_ok=True)
+    path = dir_path / f"{profile.name}.yaml"
+    path.write_text(
+        yaml.safe_dump(profile.to_dict(), sort_keys=False, allow_unicode=True), encoding="utf-8"
+    )
+    return path
+
+
+def list_profile_paths(dir_path: str | Path = DEFAULT_PROFILES_DIR) -> list[Path]:
+    dir_path = Path(dir_path)
+    if not dir_path.exists():
+        return []
+    return sorted(
+        p for p in dir_path.glob("*.yaml") if p.name != "profile.yaml.example"
+    )
+
+
+def load_profiles(dir_path: str | Path = DEFAULT_PROFILES_DIR) -> list[ProfileConfig]:
+    """Load every profiles/<name>.yaml in the given directory."""
+    profiles = [load_profile(p) for p in list_profile_paths(dir_path)]
+    if not profiles:
+        raise FileNotFoundError(
+            f"No profiles found in {dir_path}/. Copy profiles/profile.yaml.example "
+            "to profiles/<name>.yaml and edit it."
+        )
+    return profiles

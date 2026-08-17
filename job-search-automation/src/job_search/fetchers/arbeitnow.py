@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import requests
 
-from ..config import AppConfig
+from ..config import AppConfig, KeywordsConfig
 from ..models import JobListing
 from .base import DEFAULT_TIMEOUT, is_senior, report
 
@@ -12,7 +12,7 @@ NAME = "Arbeitnow"
 API_URL = "https://www.arbeitnow.com/api/job-board-api"
 
 
-def fetch(cfg: AppConfig) -> list[JobListing]:
+def fetch(cfg: AppConfig, prefilter: KeywordsConfig) -> list[JobListing]:
     jobs: list[JobListing] = []
     try:
         resp = requests.get(API_URL, timeout=DEFAULT_TIMEOUT)
@@ -21,7 +21,7 @@ def fetch(cfg: AppConfig) -> list[JobListing]:
             if not item.get("remote"):
                 continue
             title = item.get("title", "")
-            if not is_senior(title, cfg):
+            if not is_senior(title, prefilter):
                 continue
             jobs.append(
                 JobListing(

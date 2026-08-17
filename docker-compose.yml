@@ -17,6 +17,7 @@ services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
+    container_name: jla-db
     environment:
       POSTGRES_USER: jobs
       POSTGRES_PASSWORD: jobs
@@ -32,6 +33,7 @@ services:
   backend:
     build: ./job-search-automation
     restart: unless-stopped
+    container_name: jla-backend
     depends_on:
       db:
         condition: service_healthy
@@ -40,6 +42,7 @@ services:
       OLLAMA_URL: ${OLLAMA_URL}
     volumes:
       - ./job-search-automation/config.yaml:/app/config.yaml
+      - ./job-search-automation/profiles:/app/profiles
       - ./job-search-automation/output:/app/output
     ports:
       - "8000:8000"
@@ -48,6 +51,7 @@ services:
   frontend:
     build: ./job-listings-app
     restart: unless-stopped
+    container_name: jla-frotend
     depends_on:
       - backend
     environment:

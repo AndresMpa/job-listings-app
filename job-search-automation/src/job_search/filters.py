@@ -2,22 +2,25 @@
 
 from __future__ import annotations
 
-from .config import AppConfig
+from .config import KeywordsConfig
 from .fetchers.base import matches_any
 from .models import JobListing
 
 
-def passes_filter(job: JobListing, cfg: AppConfig) -> bool:
-    """Reject non-technical, low-value, or off-target postings early."""
-    haystack = job.haystack
-    kw = cfg.keywords
+def passes_filter(job: JobListing, keywords: KeywordsConfig) -> bool:
+    """Reject non-technical, low-value, or off-target postings early.
 
-    if not matches_any(haystack, kw.tech):
+    `keywords` comes from a single profile (profiles/<name>.yaml) — each
+    profile keeps its own target/exclude/tech lists.
+    """
+    haystack = job.haystack
+
+    if not matches_any(haystack, keywords.tech):
         return False
-    if matches_any(haystack, kw.exclude):
+    if matches_any(haystack, keywords.exclude):
         return False
-    if not (matches_any(haystack, kw.seniority) or matches_any(haystack, kw.ai)):
+    if not (matches_any(haystack, keywords.seniority) or matches_any(haystack, keywords.ai)):
         return False
-    if not matches_any(haystack, kw.target):
+    if not matches_any(haystack, keywords.target):
         return False
     return True
