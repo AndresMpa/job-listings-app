@@ -1,0 +1,8 @@
+requests>=2.31
+PyYAML>=6.0
+
+# API + persistence
+fastapi>=0.115
+uvicorn[standard]>=0.30
+sqlalchemy>=2.0
+psycopg[binary]>=3.2

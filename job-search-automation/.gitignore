@@ -1,0 +1,9 @@
+job_matches.csv
+job_matches.md
+output/
+__pycache__/
+*.pyc
+.venv/
+
+config.yaml
+.env
