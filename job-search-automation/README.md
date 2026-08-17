@@ -114,10 +114,15 @@ API together:
 
 ```bash
 cp config.yaml.example config.yaml            # edit as needed
-cp profiles/profile.yaml.example profiles/andres.yaml
+cp profiles/profile.yaml.example profiles/andres.yaml   # at least one real profile, or the run fails fast
 docker compose up -d                          # starts db + api (http://localhost:8000)
 docker compose run --rm api python main.py    # one-off scan, all profiles, persists to Postgres
 ```
+
+> `profiles/*.yaml` is gitignored (same as `config.yaml`), so a fresh clone
+> only has `profiles/profile.yaml.example` — `python main.py` / `POST /run`
+> exit with a clear "No profiles found" error until you copy at least one
+> real profile into place.
 
 If Ollama runs in another container on a shared Docker network instead of
 on the host, put the `api` service on that network too and set `ollama.url`

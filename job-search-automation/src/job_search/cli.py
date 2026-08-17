@@ -118,12 +118,16 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    cfg = load_config(args.config)
-    profiles_dir = Path(args.profiles_dir)
-    if args.profile_names:
-        profiles = [load_profile(profiles_dir / f"{name}.yaml") for name in args.profile_names]
-    else:
-        profiles = load_profiles(profiles_dir)
+    try:
+        cfg = load_config(args.config)
+        profiles_dir = Path(args.profiles_dir)
+        if args.profile_names:
+            profiles = [load_profile(profiles_dir / f"{name}.yaml") for name in args.profile_names]
+        else:
+            profiles = load_profiles(profiles_dir)
+    except FileNotFoundError as exc:
+        print(f"\nError: {exc}")
+        sys.exit(1)
 
     results = run(cfg, profiles)
 

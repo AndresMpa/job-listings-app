@@ -162,13 +162,14 @@ def delete_profile(name: str) -> dict[str, str]:
 _run_lock = asyncio.Lock()
 
 
-def _run_and_persist(profile_names: list[str] | None) -> None:
-    cfg = load_config(CONFIG_PATH)
+def _load_run_profiles(profile_names: list[str] | None):
     if profile_names:
-        profiles = [load_profile(PROFILES_DIR / f"{name}.yaml") for name in profile_names]
-    else:
-        profiles = load_profiles(PROFILES_DIR)
+        return [load_profile(PROFILES_DIR / f"{name}.yaml") for name in profile_names]
+    return load_profiles(PROFILES_DIR)
 
+
+def _run_and_persist(profiles) -> None:
+    cfg = load_config(CONFIG_PATH)
     results = run_pipeline(cfg, profiles)
     for profile in profiles:
         kept = results.get(profile.name, [])
@@ -186,10 +187,14 @@ async def trigger_run(background_tasks: BackgroundTasks, profile: str | None = N
         raise HTTPException(409, "A run is already in progress")
 
     profile_names = [profile] if profile else None
+    try:
+        profiles = _load_run_profiles(profile_names)
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc)) from exc
 
     async def _guarded_run() -> None:
         async with _run_lock:
-            await asyncio.to_thread(_run_and_persist, profile_names)
+            await asyncio.to_thread(_run_and_persist, profiles)
 
     background_tasks.add_task(_guarded_run)
     return {"status": "started", "profiles": profile_names or "all"}
