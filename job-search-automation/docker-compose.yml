@@ -11,6 +11,7 @@
 
 services:
   db:
+    container_name: jla-db
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -30,6 +31,7 @@ services:
   api:
     build: .
     restart: unless-stopped
+    container_name: jla-api
     depends_on:
       db:
         condition: service_healthy

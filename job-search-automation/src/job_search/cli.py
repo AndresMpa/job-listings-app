@@ -46,7 +46,7 @@ def _merged_prefilter(profiles: list[ProfileConfig]) -> KeywordsConfig:
     """Union of every profile's seniority/ai keywords, used as the cheap
     fetch-time prefilter so no profile's matches get dropped before the
     full per-profile filter even runs."""
-    return reduce(lambda acc, p: acc.merge(p.keywords), (p.keywords for p in profiles), KeywordsConfig())
+    return reduce(lambda acc, kw: acc.merge(kw), (p.keywords for p in profiles), KeywordsConfig())
 
 
 def run_for_profile(

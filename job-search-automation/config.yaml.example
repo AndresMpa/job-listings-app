@@ -24,7 +24,7 @@ providers:
   remotive: true
   weworkremotely: true
   python_jobs: true
-  vuejobs: true
+  vuejobs: false
   hackernews: true
   arbeitnow: true
 
