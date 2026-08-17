@@ -9,7 +9,7 @@ from ..models import JobListing
 from .base import DEFAULT_TIMEOUT, fetch_rss_items, is_senior, report, rss_text
 
 NAME = "VueJobs"
-FEED_URL = "https://vuejobs.com/feed"
+FEED_URL = "https://vuejobs.com/posts"
 
 
 def fetch(cfg: AppConfig) -> list[JobListing]:
