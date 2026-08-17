@@ -87,8 +87,19 @@ def list_jobs(profile: str | None = None, min_score: int | None = None, limit: i
     cfg = load_config(CONFIG_PATH)
     if not cfg.database.url:
         raise HTTPException(500, "database.url is not configured")
+    if not db.schema_ready(cfg.database):
+        raise HTTPException(503, "Database schema not initialized. Call POST /init-db first.")
     records = db.fetch_jobs(cfg.database, profile=profile, min_score=min_score, limit=limit, offset=offset)
     return records
+
+
+@app.post("/init-db")
+def init_database() -> dict[str, str]:
+    cfg = load_config(CONFIG_PATH)
+    if not cfg.database.url:
+        raise HTTPException(500, "database.url is not configured")
+    db.init_db(cfg.database)
+    return {"status": "initialized"}
 
 
 # ---------------------------------------------------------------------------

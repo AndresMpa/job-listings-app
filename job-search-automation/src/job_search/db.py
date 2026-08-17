@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Integer, String, Text, UniqueConstraint, create_engine, select
+from sqlalchemy import DateTime, Integer, String, Text, UniqueConstraint, create_engine, inspect, select
 from sqlalchemy.dialects.postgresql import ARRAY, insert
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
@@ -63,6 +63,12 @@ def get_engine(db_cfg: DatabaseConfig):
 def init_db(db_cfg: DatabaseConfig) -> None:
     """Create the job_listings table if it doesn't exist yet."""
     Base.metadata.create_all(get_engine(db_cfg))
+
+
+def schema_ready(db_cfg: DatabaseConfig) -> bool:
+    """True if job_listings already exists, without creating it."""
+    engine = get_engine(db_cfg)
+    return inspect(engine).has_table(JobRecord.__tablename__)
 
 
 def save_jobs(jobs: list[JobListing], db_cfg: DatabaseConfig, profile: str = "default") -> int:

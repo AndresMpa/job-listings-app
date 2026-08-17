@@ -4,34 +4,44 @@ import type { Job, ProfileSettings } from "@/lib/types";
 
 definePageMeta({
   layout: "simple",
-  pageTransition: {
-    name: "rotate",
-  },
+  pageTransition: { name: "rotate" },
 });
 
-// Multiple people can search at once (see job-search-automation/profiles/);
-// this lets the frontend show one person's matches at a time, or everyone's.
 const { data: profiles } = await useFetch<ProfileSettings[]>("/api/profiles");
-const selectedProfile = ref<string>(""); // "" = every profile
+const selectedProfile = ref<string>("");
 
-const { data, refresh } = await useFetch<Job[]>("/api/jobs", {
+const { data, error, refresh } = await useFetch<Job[]>("/api/jobs", {
   query: computed(() => (selectedProfile.value ? { profile: selectedProfile.value } : {})),
 });
 
 const selectedTags = ref<string[]>([]);
 const handleTag = (tag: string) => {
   const index = selectedTags.value.indexOf(tag);
-  index === -1
-    ? selectedTags.value.push(tag)
-    : selectedTags.value.splice(index, 1);
+  index === -1 ? selectedTags.value.push(tag) : selectedTags.value.splice(index, 1);
 };
 const clearTags = () => (selectedTags.value = []);
 
-// Empty-state search trigger: fires the backend's full fetch/score/report
-// run, then reloads /api/jobs so results show up without a manual refresh.
+// useFetch surfaces backend failures via `error`, with the HTTP status on
+// `.statusCode`. 503 = schema not initialized; anything else = real failure.
+const schemaMissing = computed(() => error.value?.statusCode === 503);
+
+const initializing = ref(false);
+const initError = ref("");
+async function initDatabase() {
+  initializing.value = true;
+  initError.value = "";
+  try {
+    await $fetch("/api/init-db", { method: "POST" });
+    await refresh();
+  } catch {
+    initError.value = "Could not initialize the database. Please try again.";
+  } finally {
+    initializing.value = false;
+  }
+}
+
 const running = ref(false);
 const runError = ref("");
-
 async function startSearch() {
   running.value = true;
   runError.value = "";
@@ -41,7 +51,7 @@ async function startSearch() {
       query: selectedProfile.value ? { profile: selectedProfile.value } : {},
     });
     await refresh();
-  } catch (err) {
+  } catch {
     runError.value = "Could not start the search. Please try again.";
   } finally {
     running.value = false;
@@ -63,25 +73,26 @@ async function startSearch() {
         </select>
       </label>
     </div>
-    <div
-      v-if="selectedTags.length !== 0"
-      class="transition-opacity duration-500 ease-in-out"
-    >
-      <JobFilter
-        @remove-tag="handleTag"
-        @clear-tags="clearTags"
-        :selected-tags="selectedTags"
-      />
+
+    <div v-if="selectedTags.length !== 0" class="transition-opacity duration-500 ease-in-out">
+      <JobFilter @remove-tag="handleTag" @clear-tags="clearTags" :selected-tags="selectedTags" />
     </div>
 
+    <!-- Results -->
     <div v-if="data && data.length > 0" :class="selectedTags.length !== 0 ? 'mt-11' : 'mt-24'">
-      <JobList
-        :job-data="data"
-        :selected-tags="selectedTags"
-        @handle-tag="handleTag"
-      />
+      <JobList :job-data="data" :selected-tags="selectedTags" @handle-tag="handleTag" />
     </div>
 
+    <!-- Empty state: no schema yet -->
+    <div v-else-if="schemaMissing" class="flex flex-col items-center justify-center gap-3 mt-24">
+      <p class="text-sm text-primary-foreground">The database hasn't been set up yet.</p>
+      <Button size="lg" :disabled="initializing" @click="initDatabase">
+        {{ initializing ? "Setting up…" : "Initialize database" }}
+      </Button>
+      <p v-if="initError" class="text-sm text-destructive">{{ initError }}</p>
+    </div>
+
+    <!-- Empty state: schema ready, no results yet -->
     <div v-else-if="data" class="flex flex-col items-center justify-center gap-3 mt-24">
       <Button size="lg" :disabled="running" @click="startSearch">
         {{ running ? "Searching…" : "Start to search" }}
