@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import requests
 
-from ..config import AppConfig
+from ..config import AppConfig, KeywordsConfig
 from ..models import JobListing
 from .base import DEFAULT_TIMEOUT, is_senior, report, split_title_and_company
 
@@ -14,7 +14,7 @@ ITEM_URL = "https://hacker-news.firebaseio.com/v0/item/{item_id}.json"
 MAX_ITEMS = 30
 
 
-def fetch(cfg: AppConfig) -> list[JobListing]:
+def fetch(cfg: AppConfig, prefilter: KeywordsConfig) -> list[JobListing]:
     jobs: list[JobListing] = []
     try:
         resp = requests.get(JOB_STORIES_URL, timeout=DEFAULT_TIMEOUT)
@@ -35,7 +35,7 @@ def fetch(cfg: AppConfig) -> list[JobListing]:
         if not item or not item.get("title") or item.get("dead"):
             continue
         raw_title = item["title"]
-        if not is_senior(raw_title, cfg):
+        if not is_senior(raw_title, prefilter):
             continue
 
         title, company = split_title_and_company(raw_title)

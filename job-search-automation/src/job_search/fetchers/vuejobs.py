@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import requests
 
-from ..config import AppConfig
+from ..config import AppConfig, KeywordsConfig
 from ..models import JobListing
 from .base import DEFAULT_TIMEOUT, fetch_rss_items, is_senior, report, rss_text
 
@@ -12,12 +12,12 @@ NAME = "VueJobs"
 FEED_URL = "https://vuejobs.com/posts"
 
 
-def fetch(cfg: AppConfig) -> list[JobListing]:
+def fetch(cfg: AppConfig, prefilter: KeywordsConfig) -> list[JobListing]:
     jobs: list[JobListing] = []
     try:
         for item in fetch_rss_items(FEED_URL, DEFAULT_TIMEOUT):
             title = rss_text(item, "title")
-            if not title or not is_senior(title, cfg):
+            if not title or not is_senior(title, prefilter):
                 continue
             jobs.append(
                 JobListing(

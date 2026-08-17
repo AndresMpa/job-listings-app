@@ -2,8 +2,10 @@
 # or another container on a shared network) — point ollama.url at it via
 # config.yaml or the OLLAMA_URL env var below.
 #
-# A one-off scan (fetch + score + persist) is run separately:
+# A one-off scan (fetch + score + persist) is run separately, for every
+# profile in ./profiles or just one:
 #   docker compose run --rm api python main.py
+#   docker compose run --rm api python main.py -p andres
 # Wire that into cron/systemd-timer on the host, or into whatever scheduler
 # already exists on your shared Docker network.
 
@@ -38,7 +40,7 @@ services:
       - "8000:8000"
     volumes:
       - ./config.yaml:/app/config.yaml   # writable: PUT /config saves here
-      - ./output:/app/output
+      - ./profiles:/app/profiles         # writable: PUT /profiles/{name} saves here
     entrypoint: ["uvicorn", "job_search.api:app", "--host", "0.0.0.0", "--port", "8000"]
 
 volumes:

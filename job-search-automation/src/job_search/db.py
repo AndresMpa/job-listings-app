@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Integer, String, Text, create_engine, select
+from sqlalchemy import DateTime, Integer, String, Text, UniqueConstraint, create_engine, select
 from sqlalchemy.dialects.postgresql import ARRAY, insert
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
@@ -27,12 +27,17 @@ class Base(DeclarativeBase):
 
 class JobRecord(Base):
     __tablename__ = "job_listings"
+    __table_args__ = (UniqueConstraint("profile", "url", name="uq_job_listings_profile_url"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    # Name of the profiles/<name>.yaml this listing was matched/scored against.
+    # The same URL can appear once per profile (each profile scores it
+    # independently), so uniqueness is (profile, url), not url alone.
+    profile: Mapped[str] = mapped_column(String(128), default="default")
     source: Mapped[str] = mapped_column(String(64))
     title: Mapped[str] = mapped_column(String(512))
     company: Mapped[str] = mapped_column(String(256), default="")
-    url: Mapped[str] = mapped_column(String(1024), unique=True)
+    url: Mapped[str] = mapped_column(String(1024))
     description: Mapped[str] = mapped_column(Text, default="")
     tags: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     salary: Mapped[str | None] = mapped_column(String(128), nullable=True)
@@ -60,8 +65,14 @@ def init_db(db_cfg: DatabaseConfig) -> None:
     Base.metadata.create_all(get_engine(db_cfg))
 
 
-def save_jobs(jobs: list[JobListing], db_cfg: DatabaseConfig) -> int:
-    """Upsert jobs by URL. Returns the number of rows written."""
+def save_jobs(jobs: list[JobListing], db_cfg: DatabaseConfig, profile: str = "default") -> int:
+    """Upsert jobs by (profile, url). Returns the number of rows written.
+
+    Each profile scores the same listing independently (different fit,
+    reasoning, outreach draft), so rows are keyed per profile rather than
+    globally by URL — otherwise two profiles matching the same posting
+    would overwrite each other's scores.
+    """
     if not jobs:
         return 0
     engine = get_engine(db_cfg)
@@ -71,6 +82,7 @@ def save_jobs(jobs: list[JobListing], db_cfg: DatabaseConfig) -> int:
     with session_factory() as session:  # type: Session
         for job in jobs:
             values = dict(
+                profile=profile,
                 source=job.source,
                 title=job.title,
                 company=job.company,
@@ -87,8 +99,10 @@ def save_jobs(jobs: list[JobListing], db_cfg: DatabaseConfig) -> int:
                 outreach_draft=job.outreach_draft,
                 updated_at=datetime.now(timezone.utc),
             )
-            stmt = insert(JobRecord).values(**values, url=job.url)
-            stmt = stmt.on_conflict_do_update(index_elements=[JobRecord.url], set_=values)
+            stmt = insert(JobRecord).values(**values)
+            stmt = stmt.on_conflict_do_update(
+                index_elements=[JobRecord.profile, JobRecord.url], set_=values
+            )
             session.execute(stmt)
         session.commit()
     return len(jobs)
@@ -96,6 +110,7 @@ def save_jobs(jobs: list[JobListing], db_cfg: DatabaseConfig) -> int:
 
 def fetch_jobs(
     db_cfg: DatabaseConfig,
+    profile: str | None = None,
     min_score: int | None = None,
     limit: int = 200,
     offset: int = 0,
@@ -104,6 +119,8 @@ def fetch_jobs(
     session_factory = sessionmaker(bind=engine)
     with session_factory() as session:  # type: Session
         stmt = select(JobRecord).order_by(JobRecord.score.desc().nulls_last(), JobRecord.first_seen_at.desc())
+        if profile is not None:
+            stmt = stmt.where(JobRecord.profile == profile)
         if min_score is not None:
             stmt = stmt.where(JobRecord.score >= min_score)
         stmt = stmt.limit(limit).offset(offset)

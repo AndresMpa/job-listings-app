@@ -8,7 +8,7 @@ else needs to change (open/closed principle).
 
 from __future__ import annotations
 
-from ..config import AppConfig
+from ..config import AppConfig, KeywordsConfig
 from ..models import JobListing
 from . import arbeitnow, hackernews, python_jobs, remoteok, remotive, vuejobs, weworkremotely
 
@@ -24,10 +24,17 @@ REGISTRY = {
 }
 
 
-def fetch_all(cfg: AppConfig) -> list[JobListing]:
-    """Run every provider enabled in config.yaml and return the combined list."""
+def fetch_all(cfg: AppConfig, prefilter: KeywordsConfig) -> list[JobListing]:
+    """Run every provider enabled in config.yaml and return the combined list.
+
+    `prefilter` is the cheap title-only pre-filter (seniority/ai keywords)
+    applied inside each fetcher before the full per-profile filtering stage.
+    When running multiple profiles in one pass, this is the *union* of every
+    profile's seniority/ai keywords, so nothing a profile cares about gets
+    dropped before it even reaches the full filter.
+    """
     jobs: list[JobListing] = []
     for field_name, fetch_fn in REGISTRY.items():
         if getattr(cfg.providers, field_name):
-            jobs.extend(fetch_fn(cfg))
+            jobs.extend(fetch_fn(cfg, prefilter))
     return jobs

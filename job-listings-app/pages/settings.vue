@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { AppSettings } from "@/lib/types";
+import type { AppSettings, ProfileSettings } from "@/lib/types";
 
 definePageMeta({
   layout: "simple",
 });
 
 const { data: settings, refresh } = await useFetch<AppSettings>("/api/settings");
+// Candidate profiles (who's being searched for) now live in their own
+// profiles/<name>.yaml files, managed via the job-search-automation API
+// directly (GET/PUT/DELETE /profiles/{name}). This page just lists them
+// read-only for now — a full editor here is a natural next step.
+const { data: profiles } = await useFetch<ProfileSettings[]>("/api/profiles");
 
 const saving = ref(false);
 const saveError = ref("");
@@ -22,15 +27,9 @@ const fromLines = (text: string) =>
     .filter(Boolean);
 
 const form = reactive({
-  profile: "",
   ollamaUrl: "",
   ollamaModel: "",
   ollamaTimeout: 300,
-  keywordsTarget: "",
-  keywordsExclude: "",
-  keywordsSeniority: "",
-  keywordsAi: "",
-  keywordsTech: "",
   providers: {
     remoteok: true,
     remotive: true,
@@ -44,30 +43,20 @@ const form = reactive({
   minScoreToKeep: 6,
   fitWeight: 0.4,
   incomeWeight: 0.6,
-  outputDir: ".",
-  csvFilename: "job_matches.csv",
-  mdFilename: "job_matches.md",
+  outputBaseDir: "profiles/output",
   databaseUrl: "",
 });
 
 function loadForm(s: AppSettings) {
-  form.profile = s.profile;
   form.ollamaUrl = s.ollama.url;
   form.ollamaModel = s.ollama.model;
   form.ollamaTimeout = s.ollama.timeout;
-  form.keywordsTarget = toLines(s.keywords.target);
-  form.keywordsExclude = toLines(s.keywords.exclude);
-  form.keywordsSeniority = toLines(s.keywords.seniority);
-  form.keywordsAi = toLines(s.keywords.ai);
-  form.keywordsTech = toLines(s.keywords.tech);
   form.providers = { ...s.providers };
   form.wwrCategories = toLines(s.weworkremotely.categories);
   form.minScoreToKeep = s.scoring.min_score_to_keep;
   form.fitWeight = s.scoring.fit_weight;
   form.incomeWeight = s.scoring.income_weight;
-  form.outputDir = s.output.dir;
-  form.csvFilename = s.output.csv_filename;
-  form.mdFilename = s.output.md_filename;
+  form.outputBaseDir = s.output_base_dir;
   form.databaseUrl = s.database.url;
 }
 
@@ -79,15 +68,7 @@ async function save() {
   saveOk.value = false;
 
   const payload: AppSettings = {
-    profile: form.profile,
     ollama: { url: form.ollamaUrl, model: form.ollamaModel, timeout: form.ollamaTimeout },
-    keywords: {
-      target: fromLines(form.keywordsTarget),
-      exclude: fromLines(form.keywordsExclude),
-      seniority: fromLines(form.keywordsSeniority),
-      ai: fromLines(form.keywordsAi),
-      tech: fromLines(form.keywordsTech),
-    },
     providers: { ...form.providers },
     weworkremotely: { categories: fromLines(form.wwrCategories) },
     scoring: {
@@ -95,7 +76,7 @@ async function save() {
       fit_weight: form.fitWeight,
       income_weight: form.incomeWeight,
     },
-    output: { dir: form.outputDir, csv_filename: form.csvFilename, md_filename: form.mdFilename },
+    output_base_dir: form.outputBaseDir,
     database: { url: form.databaseUrl },
   };
 
@@ -129,13 +110,28 @@ const providerLabels: Record<keyof AppSettings["providers"], string> = {
 
     <form v-else class="space-y-6" @submit.prevent="save">
       <Card class="bg-primary-foreground">
-        <CardHeader><CardTitle>Candidate profile</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Profiles</CardTitle></CardHeader>
         <CardContent>
-          <textarea
-            v-model="form.profile"
-            rows="6"
-            class="w-full rounded border border-gray-300 p-2 font-mono text-sm"
-          />
+          <p class="text-sm text-muted-foreground mb-3">
+            Each candidate profile (their bio and keyword lists) lives in its own
+            <code>profiles/&lt;name&gt;.yaml</code> file, so several people can search for jobs
+            at once. Manage them via the job-search-automation API
+            (<code>GET/PUT/DELETE /profiles/{name}</code>) — this page only lists them.
+          </p>
+          <ul v-if="profiles && profiles.length" class="space-y-2">
+            <li
+              v-for="p in profiles"
+              :key="p.name"
+              class="rounded border border-gray-200 p-3 text-sm"
+            >
+              <span class="font-semibold">{{ p.name }}</span>
+              <span class="text-muted-foreground"> — {{ p.keywords.target.length }} target keywords</span>
+            </li>
+          </ul>
+          <p v-else class="text-sm text-muted-foreground">
+            No profiles yet — copy <code>profiles/profile.yaml.example</code> to
+            <code>profiles/&lt;name&gt;.yaml</code> to add one.
+          </p>
         </CardContent>
       </Card>
 
@@ -153,32 +149,6 @@ const providerLabels: Record<keyof AppSettings["providers"], string> = {
           <label class="flex flex-col gap-1 text-sm">
             Timeout (seconds)
             <input v-model.number="form.ollamaTimeout" type="number" class="rounded border border-gray-300 p-2" />
-          </label>
-        </CardContent>
-      </Card>
-
-      <Card class="bg-primary-foreground">
-        <CardHeader><CardTitle>Keywords (one per line)</CardTitle></CardHeader>
-        <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <label class="flex flex-col gap-1 text-sm">
-            Target — at least one must match
-            <textarea v-model="form.keywordsTarget" rows="6" class="rounded border border-gray-300 p-2 font-mono text-sm" />
-          </label>
-          <label class="flex flex-col gap-1 text-sm">
-            Exclude — any match disqualifies
-            <textarea v-model="form.keywordsExclude" rows="6" class="rounded border border-gray-300 p-2 font-mono text-sm" />
-          </label>
-          <label class="flex flex-col gap-1 text-sm">
-            Seniority
-            <textarea v-model="form.keywordsSeniority" rows="4" class="rounded border border-gray-300 p-2 font-mono text-sm" />
-          </label>
-          <label class="flex flex-col gap-1 text-sm">
-            AI-related
-            <textarea v-model="form.keywordsAi" rows="4" class="rounded border border-gray-300 p-2 font-mono text-sm" />
-          </label>
-          <label class="flex flex-col gap-1 text-sm md:col-span-2">
-            Technical (must match at least one)
-            <textarea v-model="form.keywordsTech" rows="4" class="rounded border border-gray-300 p-2 font-mono text-sm" />
           </label>
         </CardContent>
       </Card>
@@ -226,16 +196,8 @@ const providerLabels: Record<keyof AppSettings["providers"], string> = {
         <CardHeader><CardTitle>Output & database</CardTitle></CardHeader>
         <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label class="flex flex-col gap-1 text-sm">
-            Output directory
-            <input v-model="form.outputDir" class="rounded border border-gray-300 p-2" />
-          </label>
-          <label class="flex flex-col gap-1 text-sm">
-            CSV filename
-            <input v-model="form.csvFilename" class="rounded border border-gray-300 p-2" />
-          </label>
-          <label class="flex flex-col gap-1 text-sm">
-            Markdown filename
-            <input v-model="form.mdFilename" class="rounded border border-gray-300 p-2" />
+            Output base directory (each profile gets its own subfolder)
+            <input v-model="form.outputBaseDir" class="rounded border border-gray-300 p-2" />
           </label>
           <label class="flex flex-col gap-1 text-sm">
             Postgres URL (empty = DB disabled)

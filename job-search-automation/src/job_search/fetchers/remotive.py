@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import requests
 
-from ..config import AppConfig
+from ..config import AppConfig, KeywordsConfig
 from ..models import JobListing
 from .base import DEFAULT_TIMEOUT, is_ai_related, is_senior, report
 
@@ -12,7 +12,7 @@ NAME = "Remotive"
 API_URL = "https://remotive.com/api/remote-jobs"
 
 
-def fetch(cfg: AppConfig) -> list[JobListing]:
+def fetch(cfg: AppConfig, prefilter: KeywordsConfig) -> list[JobListing]:
     jobs: list[JobListing] = []
     try:
         resp = requests.get(
@@ -23,7 +23,7 @@ def fetch(cfg: AppConfig) -> list[JobListing]:
         resp.raise_for_status()
         for item in resp.json().get("jobs", []):
             title = item.get("title", "")
-            if not (is_senior(title, cfg) or is_ai_related(title, cfg)):
+            if not (is_senior(title, prefilter) or is_ai_related(title, prefilter)):
                 continue
             jobs.append(
                 JobListing(

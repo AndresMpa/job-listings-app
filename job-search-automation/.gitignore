@@ -1,9 +1,17 @@
 job_matches.csv
 job_matches.md
-output/
 __pycache__/
 *.pyc
 .venv/
 
 config.yaml
 .env
+
+# Candidate profiles hold personal data (CV summary, keywords) — keep them
+# local. Only the .example template is tracked.
+profiles/*.yaml
+!profiles/profile.yaml.example
+
+# Per-profile reports.
+profiles/output/*
+!profiles/output/.gitkeep
