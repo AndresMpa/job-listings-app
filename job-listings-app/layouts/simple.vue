@@ -12,14 +12,12 @@ useHead({
 <template>
   <div class="bg-primary sm:bg-theme-desktop bg-theme-mobile">
     <AppHoverMenu>
-      <div>
-        <NuxtLink to="/settings" class="text-primary font-bold hover:underline">Settings</NuxtLink>
-      </div>
-      <div>
-        <UtilLanguageSwitcher />
-      </div>
-      <div>
-        <UtilThemeSwitcher />
+      <h2>Navigation</h2>
+      <div class="flex flex-col justify-start gap-y-2">
+        <NuxtLink to="/" class="text-primary font-bold my-auto hover:underline">Home</NuxtLink>
+        <NuxtLink to="/jobs" class="text-primary font-bold my-auto hover:underline">Jobs</NuxtLink>
+        <NuxtLink to="/profiles" class="text-primary font-bold my-auto hover:underline">Profiles</NuxtLink>
+        <NuxtLink to="/settings" class="text-primary font-bold my-auto hover:underline">Settings</NuxtLink>
       </div>
     </AppHoverMenu>
     <slot />

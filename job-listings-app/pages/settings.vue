@@ -103,7 +103,7 @@ const providerLabels: Record<keyof AppSettings["providers"], string> = {
 </script>
 
 <template>
-  <div class="relative pt-32 pb-20 max-w-3xl mx-auto px-4">
+  <div class="relative pb-20 max-w-3xl mx-auto px-4">
     <h1 class="text-3xl font-bold text-primary-foreground mb-8">Settings</h1>
 
     <div v-if="!settings" class="text-primary-foreground">Loading configuration…</div>
@@ -140,15 +140,15 @@ const providerLabels: Record<keyof AppSettings["providers"], string> = {
         <CardContent class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <label class="flex flex-col gap-1 text-sm">
             URL (empty = auto-detect)
-            <input v-model="form.ollamaUrl" class="rounded border border-gray-300 p-2" />
+            <input v-model="form.ollamaUrl" class="rounded bg-primary-foreground border border-gray-300 p-2" />
           </label>
           <label class="flex flex-col gap-1 text-sm">
             Model
-            <input v-model="form.ollamaModel" class="rounded border border-gray-300 p-2" />
+            <input v-model="form.ollamaModel" class="rounded bg-primary-foreground border border-gray-300 p-2" />
           </label>
           <label class="flex flex-col gap-1 text-sm">
             Timeout (seconds)
-            <input v-model.number="form.ollamaTimeout" type="number" class="rounded border border-gray-300 p-2" />
+            <input v-model.number="form.ollamaTimeout" type="number" class="rounded bg-primary-foreground border border-gray-300 p-2" />
           </label>
         </CardContent>
       </Card>
@@ -161,7 +161,7 @@ const providerLabels: Record<keyof AppSettings["providers"], string> = {
             :key="key"
             class="flex items-center gap-2 text-sm"
           >
-            <input type="checkbox" v-model="form.providers[key]" />
+            <input class="bg-primary-foreground" type="checkbox" v-model="form.providers[key]" />
             {{ label }}
           </label>
         </CardContent>
@@ -170,7 +170,7 @@ const providerLabels: Record<keyof AppSettings["providers"], string> = {
       <Card class="bg-primary-foreground">
         <CardHeader><CardTitle>We Work Remotely categories (one per line)</CardTitle></CardHeader>
         <CardContent>
-          <textarea v-model="form.wwrCategories" rows="4" class="w-full rounded border border-gray-300 p-2 font-mono text-sm" />
+          <textarea v-model="form.wwrCategories" rows="4" class="w-full rounded bg-primary-foreground border border-gray-300 p-2 font-mono text-sm" />
         </CardContent>
       </Card>
 
@@ -179,15 +179,15 @@ const providerLabels: Record<keyof AppSettings["providers"], string> = {
         <CardContent class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <label class="flex flex-col gap-1 text-sm">
             Minimum score to keep (0-10)
-            <input v-model.number="form.minScoreToKeep" type="number" min="0" max="10" class="rounded border border-gray-300 p-2" />
+            <input v-model.number="form.minScoreToKeep" type="number" min="0" max="10" class="rounded bg-primary-foreground border border-gray-300 p-2" />
           </label>
           <label class="flex flex-col gap-1 text-sm">
             Fit weight
-            <input v-model.number="form.fitWeight" type="number" step="0.1" min="0" max="1" class="rounded border border-gray-300 p-2" />
+            <input v-model.number="form.fitWeight" type="number" step="0.1" min="0" max="1" class="rounded bg-primary-foreground border border-gray-300 p-2" />
           </label>
           <label class="flex flex-col gap-1 text-sm">
             Income weight
-            <input v-model.number="form.incomeWeight" type="number" step="0.1" min="0" max="1" class="rounded border border-gray-300 p-2" />
+            <input v-model.number="form.incomeWeight" type="number" step="0.1" min="0" max="1" class="rounded bg-primary-foreground border border-gray-300 p-2" />
           </label>
         </CardContent>
       </Card>
@@ -197,11 +197,11 @@ const providerLabels: Record<keyof AppSettings["providers"], string> = {
         <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label class="flex flex-col gap-1 text-sm">
             Output base directory (each profile gets its own subfolder)
-            <input v-model="form.outputBaseDir" class="rounded border border-gray-300 p-2" />
+            <input v-model="form.outputBaseDir" class="rounded bg-primary-foreground border border-gray-300 p-2" />
           </label>
           <label class="flex flex-col gap-1 text-sm">
             Postgres URL (empty = DB disabled)
-            <input v-model="form.databaseUrl" class="rounded border border-gray-300 p-2 font-mono text-xs" />
+            <input v-model="form.databaseUrl" class="rounded bg-primary-foreground border border-gray-300 p-2 font-mono text-xs" />
           </label>
         </CardContent>
       </Card>

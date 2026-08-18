@@ -25,15 +25,21 @@ import { Icon } from "@iconify/vue";
         </Button>
       </div>
     </SheetTrigger>
-    <SheetContent :side="'right'">
+    <SheetContent :side="'right'" class="flex flex-col h-full">
       <SheetHeader>
-        <SheetTitle>Edit profile</SheetTitle>
-        <SheetDescription>
-          Make changes to your profile here. Click save when you're done.
-        </SheetDescription>
+        <SheetTitle>Job Listing App</SheetTitle>
+        <div class="flex flex-row mr-5 justify-between">
+          <SheetDescription>
+            Helping you tracking jobs.
+          </SheetDescription>
+          <div class="flex flex-row justify-end">
+            <UtilLanguageSwitcher />
+            <UtilThemeSwitcher />
+          </div>
+        </div>
       </SheetHeader>
       <slot />
-      <SheetFooter>
+      <SheetFooter class="mt-auto">
         <SheetClose as-child>
           <Button>Close</Button>
         </SheetClose>
