@@ -38,8 +38,11 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
-    "/": { prerender: true, redirect: "/jobs" },
+    "/": { prerender: true, redirect: "/home" },
+    "/home": { ssr: true },
+    "/profiles": { ssr: false },
     "/jobs": { ssr: false },
+    "/jobs/**": { ssr: false },
     "/about": { ssr: true, redirect: "/jobs" },
     "/settings": { ssr: false },
   },
