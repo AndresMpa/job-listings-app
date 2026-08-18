@@ -41,6 +41,13 @@ class OllamaConfig:
     url: str = field(default_factory=_detect_ollama_url)
     model: str = "qwen2.5:14b"
     timeout: int = 300
+    # Hybrid-reasoning models (Qwen3, DeepSeek-R1, ...) emit a long
+    # <think>...</think> block before answering unless told not to. That's
+    # usually wasted time for a JSON scoring/outreach task, so default to
+    # off. Set true to let the model think — slower, occasionally better
+    # reasoning quality on ambiguous postings. No-op on models that don't
+    # support toggling it.
+    think: bool = False
 
 
 @dataclass(frozen=True)
@@ -157,16 +164,26 @@ def _section(raw: dict[str, Any], key: str, cls):
     return cls(**raw.get(key, {})) if raw.get(key) else cls()
 
 
+def _env_bool(name: str) -> bool | None:
+    """Parse a boolean env var (1/true/yes, case-insensitive). None if unset."""
+    raw = os.environ.get(name)
+    if raw is None:
+        return None
+    return raw.strip().lower() in ("1", "true", "yes", "on")
+
+
 def config_from_dict(raw: dict[str, Any]) -> AppConfig:
     """Build an AppConfig from a plain dict, applying the same env overrides
     that load_config() does. Used directly by the settings API when it
     receives a JSON body instead of reading a file.
     """
     ollama_raw = raw.get("ollama", {}) or {}
+    ollama_think = _env_bool("OLLAMA_THINK")
     ollama = OllamaConfig(
         url=os.environ.get("OLLAMA_URL") or ollama_raw.get("url") or _detect_ollama_url(),
         model=os.environ.get("OLLAMA_MODEL") or ollama_raw.get("model", "qwen2.5:14b"),
         timeout=int(os.environ.get("OLLAMA_TIMEOUT") or ollama_raw.get("timeout", 300)),
+        think=ollama_think if ollama_think is not None else bool(ollama_raw.get("think", False)),
     )
     database_raw = raw.get("database", {}) or {}
     database = DatabaseConfig(url=os.environ.get("DATABASE_URL") or database_raw.get("url", ""))

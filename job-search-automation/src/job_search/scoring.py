@@ -10,9 +10,18 @@ import requests
 from .config import AppConfig
 from .models import JobListing
 
+# Qwen3 (and other hybrid-reasoning models) default to emitting a long
+# <think>...</think> block before the actual answer, which can eat a whole
+# request's timeout on slow/CPU-only hardware. Controlled by ollama.think
+# in config.yaml (default false). /no_think is Qwen3's own prompt-level
+# switch; "think": false in the request body is the equivalent top-level
+# option Ollama (>=0.6.9) exposes for models that support toggling it.
+# Both are harmless no-ops on models that don't.
+NO_THINK_SUFFIX = "\n/no_think"
+
 SCORE_PROMPT = """Evaluate this job posting for a Senior AI Engineer.
 
-Respond ONLY with JSON:
+Respond ONLY with JSON, no other text:
 {{"fit": <1-10>, "income": <1-10>, "reason": "<short explanation>"}}
 
 CANDIDATE PROFILE:
@@ -47,6 +56,8 @@ Mention:
 - A [Name] placeholder for the signature
 """
 
+THINK_BLOCK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
+
 
 class OllamaClient:
     """Thin wrapper around the Ollama /api/generate endpoint."""
@@ -71,17 +82,34 @@ class OllamaClient:
         print(f"Connected to Ollama, model '{self.cfg.ollama.model}' is available.")
         return True
 
-    def _generate(self, prompt: str) -> str:
+    def _generate(self, prompt: str, num_predict: int = 500) -> str:
+        if not self.cfg.ollama.think:
+            prompt += NO_THINK_SUFFIX
         try:
             resp = requests.post(
                 self.cfg.ollama.url,
-                json={"model": self.cfg.ollama.model, "prompt": prompt, "stream": False},
+                json={
+                    "model": self.cfg.ollama.model,
+                    "prompt": prompt,
+                    "stream": False,
+                    "think": self.cfg.ollama.think,  # ignored by models that don't support it
+                    "options": {"num_predict": num_predict},
+                },
                 timeout=self.cfg.ollama.timeout,
             )
             resp.raise_for_status()
-            return resp.json().get("response", "").strip()
+            raw = resp.json().get("response", "").strip()
+            # Belt and suspenders: strip a <think> block if one leaked through
+            # despite the flags above (e.g. think=true but caller still wants
+            # the block excluded from the parsed answer).
+            return THINK_BLOCK_RE.sub("", raw).strip()
         except requests.exceptions.Timeout:
-            print(f"  Ollama timed out after {self.cfg.ollama.timeout}s - skipping.")
+            print(
+                f"  Ollama timed out after {self.cfg.ollama.timeout}s - skipping. "
+                "If this keeps happening, the model is likely too slow for your "
+                "hardware at this timeout; try a smaller/faster model, make sure "
+                "ollama.think is false, or raise ollama.timeout in config.yaml."
+            )
             return ""
         except requests.RequestException as exc:
             print(f"  Ollama error: {exc}")
@@ -96,7 +124,7 @@ class OllamaClient:
             salary=job.salary or "unspecified",
             description=job.description[:1000],
         )
-        raw = self._generate(prompt)
+        raw = self._generate(prompt, num_predict=300)
         if not raw:
             job.fit_score = job.income_score = job.score = 0
             job.reasoning = "Timeout"
@@ -119,4 +147,4 @@ class OllamaClient:
 
     def draft_outreach(self, job: JobListing, profile_text: str) -> None:
         prompt = OUTREACH_PROMPT.format(profile=profile_text, title=job.title, company=job.company)
-        job.outreach_draft = self._generate(prompt)
+        job.outreach_draft = self._generate(prompt, num_predict=200)

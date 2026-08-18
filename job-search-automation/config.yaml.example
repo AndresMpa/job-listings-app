@@ -17,6 +17,14 @@ ollama:
   url: null
   model: qwen2.5:14b
   timeout: 300 # seconds
+  # Hybrid-reasoning models (Qwen3, DeepSeek-R1, ...) emit a long <think>
+  # block before answering unless told not to — usually just wasted time
+  # for a JSON scoring task, and often what's actually behind a timeout.
+  # false = skip thinking (faster, recommended on CPU-only setups).
+  # true  = let the model think (slower, occasionally better reasoning).
+  # No-op on models that don't support toggling it.
+  # Overridable at runtime with the OLLAMA_THINK env var (1/true/yes).
+  think: false
 
 # Enable/disable individual providers without touching any code.
 providers:
