@@ -19,9 +19,9 @@ services:
     restart: unless-stopped
     container_name: jla-db
     environment:
-      POSTGRES_USER: jobs
-      POSTGRES_PASSWORD: jobs
-      POSTGRES_DB: jobs
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - job_platform_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -38,8 +38,9 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+psycopg://jobs:jobs@db:5432/jobs
+      DATABASE_URL: ${DATABASE_URL}
       OLLAMA_URL: ${OLLAMA_URL}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
     volumes:
       - ./job-search-automation/config.yaml:/app/config.yaml
       - ./job-search-automation/profiles:/app/profiles
