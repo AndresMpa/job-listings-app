@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import csv
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .models import JobListing
@@ -17,7 +17,17 @@ def write_csv_report(jobs: list[JobListing], path: Path) -> None:
         writer = csv.writer(f)
         writer.writerow(CSV_HEADER)
         for j in jobs:
-            writer.writerow([j.score, j.fit_score, j.income_score, j.title, j.company, j.salary or "", j.url])
+            writer.writerow(
+                [
+                    j.score,
+                    j.fit_score,
+                    j.income_score,
+                    j.title,
+                    j.company,
+                    j.salary or "",
+                    j.url,
+                ]
+            )
 
 
 def _emoji_for(job: JobListing) -> str:
@@ -30,7 +40,7 @@ def _emoji_for(job: JobListing) -> str:
 
 
 def write_markdown_report(jobs: list[JobListing], path: Path) -> None:
-    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    now = datetime.now(timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M")
     lines = [
         f"# 💰 High-Value Job Matches — {now}",
         "",
@@ -53,7 +63,11 @@ def write_markdown_report(jobs: list[JobListing], path: Path) -> None:
             "",
         ]
         if j.outreach_draft:
-            lines += ["**Outreach:**", "> " + j.outreach_draft.replace("\n", "\n> "), ""]
+            lines += [
+                "**Outreach:**",
+                "> " + j.outreach_draft.replace("\n", "\n> "),
+                "",
+            ]
         lines += ["---", ""]
 
     path.parent.mkdir(parents=True, exist_ok=True)

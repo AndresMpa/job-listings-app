@@ -76,7 +76,9 @@ class OllamaClient:
 
         model_names = [m.get("name") for m in resp.json().get("models", [])]
         if not any(self.cfg.ollama.model in name for name in model_names):
-            print(f"Model '{self.cfg.ollama.model}' not found. Available: {', '.join(model_names)}")
+            print(
+                f"Model '{self.cfg.ollama.model}' not found. Available: {', '.join(model_names)}"
+            )
             return False
 
         print(f"Connected to Ollama, model '{self.cfg.ollama.model}' is available.")
@@ -146,5 +148,7 @@ class OllamaClient:
             job.reasoning = "Error"
 
     def draft_outreach(self, job: JobListing, profile_text: str) -> None:
-        prompt = OUTREACH_PROMPT.format(profile=profile_text, title=job.title, company=job.company)
+        prompt = OUTREACH_PROMPT.format(
+            profile=profile_text, title=job.title, company=job.company
+        )
         job.outreach_draft = self._generate(prompt, num_predict=200)

@@ -49,7 +49,12 @@ def _fetch_company(company, prefilter: KeywordsConfig) -> list[JobListing]:
         try:
             resp = requests.post(
                 url,
-                json={"appliedFacets": {}, "limit": PAGE_SIZE, "offset": offset, "searchText": ""},
+                json={
+                    "appliedFacets": {},
+                    "limit": PAGE_SIZE,
+                    "offset": offset,
+                    "searchText": "",
+                },
                 headers={"Accept": "application/json"},
                 timeout=DEFAULT_TIMEOUT,
             )

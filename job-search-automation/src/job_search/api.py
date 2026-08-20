@@ -57,6 +57,7 @@ app.add_middleware(
 # Jobs
 # ---------------------------------------------------------------------------
 
+
 class JobOut(BaseModel):
     id: int
     profile: str
@@ -84,13 +85,22 @@ def health() -> dict[str, str]:
 
 
 @app.get("/jobs", response_model=list[JobOut])
-def list_jobs(profile: str | None = None, min_score: int | None = None, limit: int = 200, offset: int = 0):
+def list_jobs(
+    profile: str | None = None,
+    min_score: int | None = None,
+    limit: int = 200,
+    offset: int = 0,
+):
     cfg = load_config(CONFIG_PATH)
     if not cfg.database.url:
         raise HTTPException(500, "database.url is not configured")
     if not db.schema_ready(cfg.database):
-        raise HTTPException(503, "Database schema not initialized. Call POST /init-db first.")
-    records = db.fetch_jobs(cfg.database, profile=profile, min_score=min_score, limit=limit, offset=offset)
+        raise HTTPException(
+            503, "Database schema not initialized. Call POST /init-db first."
+        )
+    records = db.fetch_jobs(
+        cfg.database, profile=profile, min_score=min_score, limit=limit, offset=offset
+    )
     return records
 
 
@@ -104,7 +114,9 @@ def send_job_telegram(job_id: int) -> dict[str, str]:
     if not cfg.database.url:
         raise HTTPException(500, "database.url is not configured")
     if not db.schema_ready(cfg.database):
-        raise HTTPException(503, "Database schema not initialized. Call POST /init-db first.")
+        raise HTTPException(
+            503, "Database schema not initialized. Call POST /init-db first."
+        )
 
     job = db.fetch_job(cfg.database, job_id)
     if job is None:
@@ -136,6 +148,7 @@ def init_database() -> dict[str, str]:
 # Settings (config.yaml) — system-wide, not tied to any profile
 # ---------------------------------------------------------------------------
 
+
 @app.get("/config")
 def get_config() -> dict[str, Any]:
     return load_config(CONFIG_PATH).to_dict()
@@ -156,6 +169,7 @@ def update_config(payload: dict[str, Any]) -> dict[str, Any]:
 # Profiles (profiles/<name>.yaml) — one entry per person/role being searched for
 # ---------------------------------------------------------------------------
 
+
 @app.get("/profiles")
 def list_profiles() -> list[dict[str, Any]]:
     profiles = []
@@ -163,7 +177,9 @@ def list_profiles() -> list[dict[str, Any]]:
         try:
             profiles.append(load_profile(path).to_dict())
         except (OSError, ValueError) as exc:
-            raise HTTPException(500, f"Could not read profile {path.name}: {exc}") from exc
+            raise HTTPException(
+                500, f"Could not read profile {path.name}: {exc}"
+            ) from exc
     return profiles
 
 
@@ -222,7 +238,9 @@ def _run_and_persist(profiles) -> None:
 
 
 @app.post("/run")
-async def trigger_run(background_tasks: BackgroundTasks, profile: str | None = None) -> dict[str, str]:
+async def trigger_run(
+    background_tasks: BackgroundTasks, profile: str | None = None
+) -> dict[str, str]:
     """Runs the pipeline for a single profile (?profile=name) or every profile."""
     if _run_lock.locked():
         raise HTTPException(409, "A run is already in progress")

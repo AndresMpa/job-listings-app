@@ -6,7 +6,14 @@ import requests
 
 from ..config import AppConfig, KeywordsConfig
 from ..models import JobListing
-from .base import DEFAULT_TIMEOUT, fetch_rss_items, is_senior, report, rss_text, split_title_and_company
+from .base import (
+    DEFAULT_TIMEOUT,
+    fetch_rss_items,
+    is_senior,
+    report,
+    rss_text,
+    split_title_and_company,
+)
 
 NAME = "WeWorkRemotely"
 FEED_URL = "https://weworkremotely.com/categories/{category}.rss"

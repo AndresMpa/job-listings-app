@@ -9,9 +9,18 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Integer, String, Text, UniqueConstraint, create_engine, inspect, select
+from sqlalchemy import (
+    DateTime,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    create_engine,
+    inspect,
+    select,
+)
 from sqlalchemy.dialects.postgresql import ARRAY, insert
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 from .config import DatabaseConfig
 from .models import JobListing
@@ -27,7 +36,9 @@ class Base(DeclarativeBase):
 
 class JobRecord(Base):
     __tablename__ = "job_listings"
-    __table_args__ = (UniqueConstraint("profile", "url", name="uq_job_listings_profile_url"),)
+    __table_args__ = (
+        UniqueConstraint("profile", "url", name="uq_job_listings_profile_url"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     # Name of the profiles/<name>.yaml this listing was matched/scored against.
@@ -50,8 +61,12 @@ class JobRecord(Base):
     reasoning: Mapped[str | None] = mapped_column(Text, nullable=True)
     outreach_draft: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow)
+    first_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, onupdate=_utcnow
+    )
 
 
 def get_engine(db_cfg: DatabaseConfig):
@@ -71,7 +86,9 @@ def schema_ready(db_cfg: DatabaseConfig) -> bool:
     return inspect(engine).has_table(JobRecord.__tablename__)
 
 
-def save_jobs(jobs: list[JobListing], db_cfg: DatabaseConfig, profile: str = "default") -> int:
+def save_jobs(
+    jobs: list[JobListing], db_cfg: DatabaseConfig, profile: str = "default"
+) -> int:
     """Upsert jobs by (profile, url). Returns the number of rows written.
 
     Each profile scores the same listing independently (different fit,
@@ -87,24 +104,24 @@ def save_jobs(jobs: list[JobListing], db_cfg: DatabaseConfig, profile: str = "de
     session_factory = sessionmaker(bind=engine)
     with session_factory() as session:  # type: Session
         for job in jobs:
-            values = dict(
-                profile=profile,
-                source=job.source,
-                title=job.title,
-                company=job.company,
-                url=job.url,
-                description=job.description,
-                tags=list(job.tags),
-                salary=job.salary,
-                location=job.location,
-                posted_date=job.posted_date,
-                fit_score=job.fit_score,
-                income_score=job.income_score,
-                score=job.score,
-                reasoning=job.reasoning,
-                outreach_draft=job.outreach_draft,
-                updated_at=datetime.now(timezone.utc),
-            )
+            values = {
+                "profile": profile,
+                "source": job.source,
+                "title": job.title,
+                "company": job.company,
+                "url": job.url,
+                "description": job.description,
+                "tags": list(job.tags),
+                "salary": job.salary,
+                "location": job.location,
+                "posted_date": job.posted_date,
+                "fit_score": job.fit_score,
+                "income_score": job.income_score,
+                "score": job.score,
+                "reasoning": job.reasoning,
+                "outreach_draft": job.outreach_draft,
+                "updated_at": datetime.now(timezone.utc),
+            }
             stmt = insert(JobRecord).values(**values)
             stmt = stmt.on_conflict_do_update(
                 index_elements=[JobRecord.profile, JobRecord.url], set_=values
@@ -132,7 +149,9 @@ def fetch_jobs(
     engine = get_engine(db_cfg)
     session_factory = sessionmaker(bind=engine)
     with session_factory() as session:  # type: Session
-        stmt = select(JobRecord).order_by(JobRecord.score.desc().nulls_last(), JobRecord.first_seen_at.desc())
+        stmt = select(JobRecord).order_by(
+            JobRecord.score.desc().nulls_last(), JobRecord.first_seen_at.desc()
+        )
         if profile is not None:
             stmt = stmt.where(JobRecord.profile == profile)
         if min_score is not None:

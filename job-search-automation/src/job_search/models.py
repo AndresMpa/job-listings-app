@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -16,16 +15,16 @@ class JobListing:
     url: str
     description: str
     tags: list[str] = field(default_factory=list)
-    salary: Optional[str] = None
+    salary: str | None = None
     location: str = ""
     posted_date: str = ""
 
     # Populated by the scoring stage
-    fit_score: Optional[int] = None
-    income_score: Optional[int] = None
-    score: Optional[int] = None
-    reasoning: Optional[str] = None
-    outreach_draft: Optional[str] = None
+    fit_score: int | None = None
+    income_score: int | None = None
+    score: int | None = None
+    reasoning: str | None = None
+    outreach_draft: str | None = None
 
     @property
     def haystack(self) -> str:

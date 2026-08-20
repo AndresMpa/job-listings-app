@@ -60,7 +60,7 @@ class KeywordsConfig:
     ai: list[str] = field(default_factory=list)
     tech: list[str] = field(default_factory=list)
 
-    def merge(self, other: "KeywordsConfig") -> "KeywordsConfig":
+    def merge(self, other: KeywordsConfig) -> KeywordsConfig:
         """Union with another KeywordsConfig, de-duplicated. Used to build a
         single cheap prefilter that covers every loaded profile at fetch time."""
         return KeywordsConfig(
@@ -236,13 +236,19 @@ def config_from_dict(raw: dict[str, Any]) -> AppConfig:
     ollama_raw = raw.get("ollama", {}) or {}
     ollama_think = _env_bool("OLLAMA_THINK")
     ollama = OllamaConfig(
-        url=os.environ.get("OLLAMA_URL") or ollama_raw.get("url") or _detect_ollama_url(),
+        url=os.environ.get("OLLAMA_URL")
+        or ollama_raw.get("url")
+        or _detect_ollama_url(),
         model=os.environ.get("OLLAMA_MODEL") or ollama_raw.get("model", "qwen2.5:14b"),
         timeout=int(os.environ.get("OLLAMA_TIMEOUT") or ollama_raw.get("timeout", 300)),
-        think=ollama_think if ollama_think is not None else bool(ollama_raw.get("think", False)),
+        think=ollama_think
+        if ollama_think is not None
+        else bool(ollama_raw.get("think", False)),
     )
     database_raw = raw.get("database", {}) or {}
-    database = DatabaseConfig(url=os.environ.get("DATABASE_URL") or database_raw.get("url", ""))
+    database = DatabaseConfig(
+        url=os.environ.get("DATABASE_URL") or database_raw.get("url", "")
+    )
 
     return AppConfig(
         ollama=ollama,
@@ -270,7 +276,10 @@ def load_config(path: str | Path = DEFAULT_CONFIG_PATH) -> AppConfig:
 def save_config(cfg: AppConfig, path: str | Path = DEFAULT_CONFIG_PATH) -> None:
     """Persist an AppConfig back to config.yaml (used by the settings API)."""
     path = Path(path)
-    path.write_text(yaml.safe_dump(cfg.to_dict(), sort_keys=False, allow_unicode=True), encoding="utf-8")
+    path.write_text(
+        yaml.safe_dump(cfg.to_dict(), sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
 
 
 def profile_from_dict(name: str, raw: dict[str, Any]) -> ProfileConfig:
@@ -297,13 +306,16 @@ def load_profile(path: str | Path) -> ProfileConfig:
     return profile_from_dict(name, raw)
 
 
-def save_profile(profile: ProfileConfig, dir_path: str | Path = DEFAULT_PROFILES_DIR) -> Path:
+def save_profile(
+    profile: ProfileConfig, dir_path: str | Path = DEFAULT_PROFILES_DIR
+) -> Path:
     """Persist a ProfileConfig to profiles/<name>.yaml. Returns the written path."""
     dir_path = Path(dir_path)
     dir_path.mkdir(parents=True, exist_ok=True)
     path = dir_path / f"{profile.name}.yaml"
     path.write_text(
-        yaml.safe_dump(profile.to_dict(), sort_keys=False, allow_unicode=True), encoding="utf-8"
+        yaml.safe_dump(profile.to_dict(), sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
     )
     return path
 

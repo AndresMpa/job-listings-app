@@ -1,5 +1,6 @@
 job_matches.csv
 job_matches.md
+.ruff_cache
 __pycache__/
 *.pyc
 .venv/

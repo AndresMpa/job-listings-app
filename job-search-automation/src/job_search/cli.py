@@ -47,28 +47,39 @@ def _merged_prefilter(profiles: list[ProfileConfig]) -> KeywordsConfig:
     """Union of every profile's seniority/ai keywords, used as the cheap
     fetch-time prefilter so no profile's matches get dropped before the
     full per-profile filter even runs."""
-    return reduce(lambda acc, kw: acc.merge(kw), (p.keywords for p in profiles), KeywordsConfig())
+    return reduce(
+        lambda acc, kw: acc.merge(kw), (p.keywords for p in profiles), KeywordsConfig()
+    )
 
 
 def run_for_profile(
-    cfg: AppConfig, profile: ProfileConfig, unique_jobs: list[JobListing], client: OllamaClient
+    cfg: AppConfig,
+    profile: ProfileConfig,
+    unique_jobs: list[JobListing],
+    client: OllamaClient,
 ) -> list[JobListing]:
     """Filter, score and rank the shared fetched listings for one profile."""
-    filtered = [copy.deepcopy(j) for j in unique_jobs if passes_filter(j, profile.keywords)]
+    filtered = [
+        copy.deepcopy(j) for j in unique_jobs if passes_filter(j, profile.keywords)
+    ]
     print(f"\n[{profile.name}] {len(filtered)} listings passed keyword filtering")
     if not filtered:
         return []
 
-    print(f"[{profile.name}] Scoring with {cfg.ollama.model} (timeout {cfg.ollama.timeout}s)...")
+    print(
+        f"[{profile.name}] Scoring with {cfg.ollama.model} (timeout {cfg.ollama.timeout}s)..."
+    )
     for i, job in enumerate(filtered, 1):
-        print(f"[{profile.name}] [{i}/{len(filtered)}] {job.title[:40]} @ {job.company[:20]}")
+        print(
+            f"[{profile.name}] [{i}/{len(filtered)}] {job.title[:40]} @ {job.company[:20]}"
+        )
         client.score_job(job, profile.profile)
         if (job.score or 0) >= cfg.scoring.min_score_to_keep:
             client.draft_outreach(job, profile.profile)
         time.sleep(0.5)
 
     kept = [j for j in filtered if (j.score or 0) >= cfg.scoring.min_score_to_keep]
-    kept.sort(key=lambda j: (j.income_score or 0), reverse=True)
+    kept.sort(key=lambda j: j.income_score or 0, reverse=True)
     return kept
 
 
@@ -91,12 +102,16 @@ def run(cfg: AppConfig, profiles: list[ProfileConfig]) -> dict[str, list[JobList
     return results
 
 
-def write_reports(cfg: AppConfig, profile: ProfileConfig, kept: list[JobListing]) -> None:
+def write_reports(
+    cfg: AppConfig, profile: ProfileConfig, kept: list[JobListing]
+) -> None:
     csv_path = profile.csv_path(cfg.output_base_dir)
     md_path = profile.md_path(cfg.output_base_dir)
     write_csv_report(kept, csv_path)
     write_markdown_report(kept, md_path)
-    print(f"\n[{profile.name}] {len(kept)} listings saved to:\n  - {csv_path}\n  - {md_path}")
+    print(
+        f"\n[{profile.name}] {len(kept)} listings saved to:\n  - {csv_path}\n  - {md_path}"
+    )
     send_profile_digest(profile, kept, md_path)
 
 
@@ -104,7 +119,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Fetch, score and report high-value remote job listings, per candidate profile."
     )
-    parser.add_argument("-c", "--config", default="config.yaml", help="Path to config.yaml (default: ./config.yaml)")
+    parser.add_argument(
+        "-c",
+        "--config",
+        default="config.yaml",
+        help="Path to config.yaml (default: ./config.yaml)",
+    )
     parser.add_argument(
         "-p",
         "--profile",
@@ -124,7 +144,10 @@ def main() -> None:
         cfg = load_config(args.config)
         profiles_dir = Path(args.profiles_dir)
         if args.profile_names:
-            profiles = [load_profile(profiles_dir / f"{name}.yaml") for name in args.profile_names]
+            profiles = [
+                load_profile(profiles_dir / f"{name}.yaml")
+                for name in args.profile_names
+            ]
         else:
             profiles = load_profiles(profiles_dir)
     except FileNotFoundError as exc:

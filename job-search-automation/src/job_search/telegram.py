@@ -19,10 +19,9 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Protocol
 
 import requests
-
-from typing import Protocol
 
 from .config import ProfileConfig
 from .models import JobListing
@@ -57,7 +56,9 @@ def _build_summary(profile: ProfileConfig, jobs: list[JobListing]) -> str:
     for j in jobs[:SUMMARY_JOB_LIMIT]:
         lines.append(f"[{j.score}/10] {j.title} @ {j.company}\n{j.url}")
     if len(jobs) > SUMMARY_JOB_LIMIT:
-        lines.append(f"\n…and {len(jobs) - SUMMARY_JOB_LIMIT} more in the attached report.")
+        lines.append(
+            f"\n…and {len(jobs) - SUMMARY_JOB_LIMIT} more in the attached report."
+        )
     return "\n\n".join(lines)[:MAX_MESSAGE_LEN]
 
 
@@ -106,7 +107,9 @@ def send_job_to_profile(profile: ProfileConfig, job: _JobLike) -> None:
     if not profile.telegram.enabled:
         raise TelegramSendError(f"Telegram isn't enabled for profile '{profile.name}'")
     if not profile.telegram.chat_id:
-        raise TelegramSendError(f"Profile '{profile.name}' has no Telegram chat_id configured")
+        raise TelegramSendError(
+            f"Profile '{profile.name}' has no Telegram chat_id configured"
+        )
     token = _bot_token()
     if not token:
         raise TelegramSendError("TELEGRAM_BOT_TOKEN is not set")
@@ -127,7 +130,9 @@ def send_job_to_profile(profile: ProfileConfig, job: _JobLike) -> None:
         raise TelegramSendError(f"Telegram API request failed: {exc}") from exc
 
 
-def send_profile_digest(profile: ProfileConfig, jobs: list[JobListing], md_path: Path) -> bool:
+def send_profile_digest(
+    profile: ProfileConfig, jobs: list[JobListing], md_path: Path
+) -> bool:
     """Sends `profile`'s digest to its configured Telegram chat, if wired up.
 
     Returns True only if a message was actually sent. Every "not configured"
@@ -145,7 +150,9 @@ def send_profile_digest(profile: ProfileConfig, jobs: list[JobListing], md_path:
         return False
     token = _bot_token()
     if not token:
-        print(f"[{profile.name}] Telegram enabled but TELEGRAM_BOT_TOKEN is not set — skipping")
+        print(
+            f"[{profile.name}] Telegram enabled but TELEGRAM_BOT_TOKEN is not set — skipping"
+        )
         return False
 
     chat_id = profile.telegram.chat_id
@@ -167,7 +174,10 @@ def send_profile_digest(profile: ProfileConfig, jobs: list[JobListing], md_path:
             with md_path.open("rb") as f:
                 resp = requests.post(
                     f"{base}/sendDocument",
-                    data={"chat_id": chat_id, "caption": f"{profile.name} — full digest"},
+                    data={
+                        "chat_id": chat_id,
+                        "caption": f"{profile.name} — full digest",
+                    },
                     files={"document": (md_path.name, f, "text/markdown")},
                     timeout=60,
                 )

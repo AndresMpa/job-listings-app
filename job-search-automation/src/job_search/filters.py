@@ -19,8 +19,8 @@ def passes_filter(job: JobListing, keywords: KeywordsConfig) -> bool:
         return False
     if matches_any(haystack, keywords.exclude):
         return False
-    if not (matches_any(haystack, keywords.seniority) or matches_any(haystack, keywords.ai)):
+    if not (
+        matches_any(haystack, keywords.seniority) or matches_any(haystack, keywords.ai)
+    ):
         return False
-    if not matches_any(haystack, keywords.target):
-        return False
-    return True
+    return matches_any(haystack, keywords.target)
