@@ -28,6 +28,7 @@ from .filters import passes_filter
 from .models import JobListing
 from .reports import write_csv_report, write_markdown_report
 from .scoring import OllamaClient
+from .telegram import send_profile_digest
 
 
 def deduplicate(jobs: list[JobListing]) -> list[JobListing]:
@@ -96,6 +97,7 @@ def write_reports(cfg: AppConfig, profile: ProfileConfig, kept: list[JobListing]
     write_csv_report(kept, csv_path)
     write_markdown_report(kept, md_path)
     print(f"\n[{profile.name}] {len(kept)} listings saved to:\n  - {csv_path}\n  - {md_path}")
+    send_profile_digest(profile, kept, md_path)
 
 
 def main() -> None:
@@ -108,7 +110,7 @@ def main() -> None:
         "--profile",
         action="append",
         dest="profile_names",
-        help="Name of a single profile to run (matches profiles/<name>.yaml). "
+        help="Name of a single profile to run (matches profiles/<n>.yaml). "
         "Repeat for several. Omit to run every profile in profiles/.",
     )
     parser.add_argument(

@@ -1,4 +1,4 @@
-# job-search-automation
+# Job Listing + Job Search Automation
 
 Fetches remote job listings from several public sources, filters them down
 to senior/AI-relevant postings with cheap keyword rules, scores the survivors
@@ -18,19 +18,18 @@ lives in `profiles/`, one YAML file per person or role.
 - **`config.yaml`** — settings that apply to every run regardless of who's
   searching: the Ollama connection, which providers are enabled, scoring
   weights, the Postgres URL. See `config.yaml.example`.
-- **`profiles/<name>.yaml`** — one file per candidate: the free-text profile
+- **`profiles/<n>.yaml`** — one file per candidate: the free-text profile
   fed to the LLM and that person's own keyword lists (`target`, `exclude`,
   `seniority`, `ai`, `tech`). See `profiles/profile.yaml.example`.
 
 A run fetches every source **once** (network calls are expensive/rate
 limited, so they're shared) and then filters + scores that same set of
 listings independently for each profile. Each profile gets its own report
-under `profiles/output/<name>/job_matches.{csv,md}` — nothing overwrites
-anyone else's results, and each person's report is self-contained (handy
-for a future step that, say, sends `profiles/output/andres/job_matches.md`
-to Andres' Telegram chat and `profiles/output/maria/job_matches.md` to
-Maria's — see `telegram:` in the profile schema, reserved but not wired up
-yet).
+under `profiles/output/<n>/job_matches.{csv,md}` — nothing overwrites
+anyone else's results, and each person's report is self-contained, which is
+what lets `profiles/output/andres/job_matches.md` go to Andres' Telegram
+chat and `profiles/output/maria/job_matches.md` go to Maria's — see
+`telegram:` in the profile schema and "Telegram delivery" below.
 
 ```
 profiles/
@@ -192,7 +191,7 @@ UI on top of `/profiles` is a natural next step but isn't built yet.
 | `keywords.ai` | Terms used to detect AI-related titles (per-provider pre-filter). |
 | `keywords.tech` | A listing must match at least one to count as "technical". |
 | `output.csv_filename` / `output.md_filename` | Report filenames within this profile's output folder. |
-| `telegram.enabled` / `telegram.chat_id` | Reserved for a future step that pushes each profile's digest to Telegram. Not implemented yet. |
+| `telegram.enabled` / `telegram.chat_id` | Push this profile's digest to Telegram after each run. See "Telegram delivery" below. |
 
 `profiles/*.yaml` are gitignored (only `profile.yaml.example` is tracked) —
 they hold personal data (CV summary, keyword tuning).
@@ -216,3 +215,34 @@ they hold personal data (CV summary, keyword tuning).
    - **Persist** — if `database.url` is set, rows are upserted keyed by
      `(profile, url)`, so the same posting can carry a different score per
      profile without collisions.
+
+## Telegram delivery
+
+After a run writes a profile's CSV/Markdown reports, it also pushes that
+digest to Telegram — a short summary message (top matches + link) followed
+by the full `job_matches.md` as a file — for every profile with
+`telegram.enabled: true` and a `telegram.chat_id` set. This runs from
+`write_reports()`, so it fires the same way whether reports come from
+`python main.py` or the API's `POST /run`.
+
+One bot serves every profile; only the chat differs:
+
+1. Talk to [@BotFather](https://t.me/BotFather) on Telegram, `/newbot`, and
+   copy the token it gives you.
+2. Set `TELEGRAM_BOT_TOKEN` in `.env` (see `.env.example`) — never in
+   `profiles/*.yaml`, it's a deployment secret shared by every profile, not
+   per-candidate data.
+3. Message your new bot once (anything), then open
+   `https://api.telegram.org/bot<token>/getUpdates` in a browser to read
+   back the numeric `chat_id` for that conversation.
+4. In `profiles/<name>.yaml`, set:
+```yaml
+   telegram:
+     enabled: true
+     chat_id: "123456789"
+```
+
+If `telegram.enabled` is false, `chat_id` is unset, or `TELEGRAM_BOT_TOKEN`
+is missing, the digest is skipped for that profile — nothing else in the
+run is affected. A failed Telegram request (bad token, chat not found,
+network issue) is logged and swallowed the same way; it never fails the run.

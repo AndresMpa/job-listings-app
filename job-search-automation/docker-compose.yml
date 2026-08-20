@@ -36,8 +36,9 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+psycopg://jobs:jobs@db:5432/jobs
+      DATABASE_URL: ${DATABASE_URL}
       OLLAMA_URL: ${OLLAMA_URL}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
     ports:
       - "8000:8000"
     volumes:
