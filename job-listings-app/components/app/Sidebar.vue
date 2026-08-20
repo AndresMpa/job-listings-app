@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Home, Inbox, Search, Settings } from '@lucide/vue'
+import { Home, Inbox, Search, Settings } from "@lucide/vue";
 import {
   Sidebar,
   SidebarContent,
@@ -16,26 +16,26 @@ const route = useRoute();
 const profileName = computed(() => route.params.name as string);
 const items = [
   {
-    title: 'Home',
-    url: '/',
+    title: "Home",
+    url: "/",
     icon: Home,
   },
   {
-    title: 'Jobs',
-    url: '/jobs',
+    title: "Jobs",
+    url: "/jobs",
     icon: Inbox,
   },
   {
-    title: 'Profiles',
-    url: '/Profiles',
+    title: "Profiles",
+    url: "/Profiles",
     icon: Search,
   },
   {
-    title: 'Settings',
-    url: '/settings',
+    title: "Settings",
+    url: "/settings",
     icon: Settings,
   },
-]
+];
 </script>
 <template>
   <Sidebar side="right" class="bg-primary-foreground text-foreground">

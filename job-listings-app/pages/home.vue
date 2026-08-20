@@ -7,18 +7,18 @@ definePageMeta({
 
 const items = [
   {
-    title: 'Profiles',
-    url: '/Profiles',
+    title: "Profiles",
+    url: "/Profiles",
   },
   {
-    title: 'Jobs',
-    url: '/jobs',
+    title: "Jobs",
+    url: "/jobs",
   },
   {
-    title: 'Settings',
-    url: '/settings',
+    title: "Settings",
+    url: "/settings",
   },
-]
+];
 </script>
 
 <template>
