@@ -1,6 +1,5 @@
 // Proxies to job-search-automation's PUT /config.
-import type { FetchError } from "ofetch";
-import type { AppSettings } from "@/lib/types";
+import type { ApiFetchError, AppSettings } from "@/lib/types";
 
 export default defineEventHandler(async (event) => {
   const { backendUrl } = useRuntimeConfig();
@@ -12,7 +11,7 @@ export default defineEventHandler(async (event) => {
       body,
     });
   } catch (err) {
-    const error = err as FetchError;
+    const error = err as ApiFetchError;
     throw createError({
       statusCode: error?.response?.status || 502,
       statusMessage:

@@ -1,7 +1,6 @@
 // Proxies to job-search-automation's GET /jobs and maps its snake_case
 // fields to the camelCase Job type the frontend uses.
-import type { FetchError } from "ofetch";
-import type { Job } from "@/lib/types";
+import type { ApiFetchError, Job } from "@/lib/types";
 
 interface BackendJob {
   id: number;
@@ -48,7 +47,7 @@ export default defineEventHandler(async (event) => {
     const data = await $fetch<BackendJob[]>(`${backendUrl}/jobs`, { query });
     return data.map(toJob);
   } catch (err) {
-    const error = err as FetchError;
+    const error = err as ApiFetchError;
     // 503 from the backend means "reachable, but schema isn't initialized" —
     // pass that through as-is so the frontend can show the right empty state,
     // instead of collapsing every failure into "couldn't reach the backend".

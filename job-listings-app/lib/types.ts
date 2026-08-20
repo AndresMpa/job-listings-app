@@ -71,4 +71,12 @@ interface ProfileSettings {
   };
 }
 
-export type { AppSettings, Job, ProfileSettings };
+// Minimal shape of the errors Nuxt's $fetch (ofetch, under the hood) throws
+// that we actually read from. Defined locally instead of importing ofetch's
+// own FetchError type, since ofetch isn't a direct dependency here.
+interface ApiFetchError {
+  data?: { statusMessage?: string };
+  response?: { status?: number; _data?: { detail?: string } };
+}
+
+export type { ApiFetchError, AppSettings, Job, ProfileSettings };

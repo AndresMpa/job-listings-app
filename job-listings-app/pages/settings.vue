@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import type { FetchError } from "ofetch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { AppSettings, ProfileSettings } from "@/lib/types";
+import type { ApiFetchError, AppSettings, ProfileSettings } from "@/lib/types";
 
 definePageMeta({
   layout: "simple",
@@ -91,7 +90,7 @@ async function save() {
     saveOk.value = true;
     await refresh();
   } catch (err) {
-    const error = err as FetchError;
+    const error = err as ApiFetchError;
     saveError.value = error?.data?.statusMessage || "Could not save settings";
   } finally {
     saving.value = false;
