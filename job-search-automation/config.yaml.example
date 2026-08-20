@@ -35,6 +35,8 @@ providers:
   vuejobs: false
   hackernews: true
   arbeitnow: true
+  greenhouse: true
+  workday: false # off until real tenant/site values are added below
 
 # WeWorkRemotely fetches one RSS feed per category listed here.
 weworkremotely:
@@ -43,6 +45,31 @@ weworkremotely:
     - remote-back-end-programming-jobs
     - remote-front-end-programming-jobs
     - remote-devops-sysadmin-jobs
+
+# Greenhouse-hosted company career boards (public JSON API, no auth needed).
+# Add a company by adding one entry here - no code changes needed. Verify
+# the token first at https://boards.greenhouse.io/<board_token> since some
+# companies migrate off Greenhouse and the token silently 404s.
+greenhouse:
+  companies:
+    - name: Celonis
+      board_token: celonis
+    - name: Databricks
+      board_token: databricks
+
+# Workday-hosted company career boards (public internal JSON API, no auth).
+# Empty by default - Workday has no predictable token-from-company-name
+# convention, so tenant/site/wd_server must come from a real job link, e.g.:
+#   https://cisco.wd1.myworkdayjobs.com/en-US/External/job/...
+#           ^tenant  ^wd_server        ^site
+# Add entries here (and flip providers.workday to true above) once confirmed:
+#   companies:
+#     - name: Cisco
+#       tenant: cisco
+#       site: External
+#       wd_server: wd1
+workday:
+  companies: []
 
 # How listings are scored (0-10) and which ones make it into the reports.
 # Applies the same way to every profile.

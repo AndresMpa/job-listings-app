@@ -10,7 +10,17 @@ from __future__ import annotations
 
 from ..config import AppConfig, KeywordsConfig
 from ..models import JobListing
-from . import arbeitnow, hackernews, python_jobs, remoteok, remotive, vuejobs, weworkremotely
+from . import (
+    arbeitnow,
+    greenhouse,
+    hackernews,
+    python_jobs,
+    remoteok,
+    remotive,
+    vuejobs,
+    weworkremotely,
+    workday,
+)
 
 # provider config field name -> fetch function
 REGISTRY = {
@@ -21,6 +31,8 @@ REGISTRY = {
     "vuejobs": vuejobs.fetch,
     "hackernews": hackernews.fetch,
     "arbeitnow": arbeitnow.fetch,
+    "greenhouse": greenhouse.fetch,
+    "workday": workday.fetch,
 }
 
 

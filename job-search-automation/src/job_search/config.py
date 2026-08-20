@@ -81,11 +81,49 @@ class ProvidersConfig:
     vuejobs: bool = True
     hackernews: bool = True
     arbeitnow: bool = True
+    greenhouse: bool = True
+    # Off by default: ships with an empty companies list until real
+    # tenant/site values are confirmed per company (see fetchers/workday.py).
+    workday: bool = False
 
 
 @dataclass(frozen=True)
 class WeWorkRemotelyConfig:
     categories: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class GreenhouseCompanyConfig:
+    name: str
+    board_token: str
+
+
+@dataclass(frozen=True)
+class GreenhouseConfig:
+    # Verified working in the POC. Add companies here only after confirming
+    # their board exists at https://boards.greenhouse.io/<token> - some
+    # companies migrate off Greenhouse and the token silently 404s.
+    companies: list[GreenhouseCompanyConfig] = field(
+        default_factory=lambda: [
+            GreenhouseCompanyConfig(name="Celonis", board_token="celonis"),
+            GreenhouseCompanyConfig(name="Databricks", board_token="databricks"),
+        ]
+    )
+
+
+@dataclass(frozen=True)
+class WorkdayCompanyConfig:
+    name: str
+    tenant: str
+    site: str
+    wd_server: str = "wd1"
+
+
+@dataclass(frozen=True)
+class WorkdayConfig:
+    # Empty until real tenant/site values are confirmed (see
+    # fetchers/workday.py for how to read them off a real job link).
+    companies: list[WorkdayCompanyConfig] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -112,6 +150,8 @@ class AppConfig:
     ollama: OllamaConfig = field(default_factory=OllamaConfig)
     providers: ProvidersConfig = field(default_factory=ProvidersConfig)
     weworkremotely: WeWorkRemotelyConfig = field(default_factory=WeWorkRemotelyConfig)
+    greenhouse: GreenhouseConfig = field(default_factory=GreenhouseConfig)
+    workday: WorkdayConfig = field(default_factory=WorkdayConfig)
     scoring: ScoringConfig = field(default_factory=ScoringConfig)
     database: DatabaseConfig = field(default_factory=DatabaseConfig)
     output_base_dir: str = str(DEFAULT_OUTPUT_BASE_DIR)
@@ -164,6 +204,22 @@ def _section(raw: dict[str, Any], key: str, cls):
     return cls(**raw.get(key, {})) if raw.get(key) else cls()
 
 
+def _greenhouse_section(raw: dict[str, Any]) -> GreenhouseConfig:
+    """Nested list of dataclasses needs its own loader - _section() only
+    handles flat dicts, and companies is a list[GreenhouseCompanyConfig]."""
+    gh_raw = raw.get("greenhouse")
+    if not gh_raw:
+        return GreenhouseConfig()
+    companies = [GreenhouseCompanyConfig(**c) for c in gh_raw.get("companies", [])]
+    return GreenhouseConfig(companies=companies)
+
+
+def _workday_section(raw: dict[str, Any]) -> WorkdayConfig:
+    wd_raw = raw.get("workday") or {}
+    companies = [WorkdayCompanyConfig(**c) for c in wd_raw.get("companies", [])]
+    return WorkdayConfig(companies=companies)
+
+
 def _env_bool(name: str) -> bool | None:
     """Parse a boolean env var (1/true/yes, case-insensitive). None if unset."""
     raw = os.environ.get(name)
@@ -192,6 +248,8 @@ def config_from_dict(raw: dict[str, Any]) -> AppConfig:
         ollama=ollama,
         providers=_section(raw, "providers", ProvidersConfig),
         weworkremotely=_section(raw, "weworkremotely", WeWorkRemotelyConfig),
+        greenhouse=_greenhouse_section(raw),
+        workday=_workday_section(raw),
         scoring=_section(raw, "scoring", ScoringConfig),
         database=database,
         output_base_dir=raw.get("output_base_dir", str(DEFAULT_OUTPUT_BASE_DIR)),
