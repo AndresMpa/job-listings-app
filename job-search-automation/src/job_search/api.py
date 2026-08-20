@@ -36,6 +36,7 @@ from .config import (
     save_config,
     save_profile,
 )
+from .telegram import TelegramSendError, send_job_to_profile
 
 CONFIG_PATH = Path("config.yaml")
 PROFILES_DIR = DEFAULT_PROFILES_DIR
@@ -91,6 +92,35 @@ def list_jobs(profile: str | None = None, min_score: int | None = None, limit: i
         raise HTTPException(503, "Database schema not initialized. Call POST /init-db first.")
     records = db.fetch_jobs(cfg.database, profile=profile, min_score=min_score, limit=limit, offset=offset)
     return records
+
+
+@app.post("/jobs/{job_id}/send-telegram")
+def send_job_telegram(job_id: int) -> dict[str, str]:
+    """Sends one job offer to Telegram — the only path used to deliver an
+    offer, so it always goes to the chat_id of the profile that owns the
+    job (JobRecord.profile), never a caller-supplied chat.
+    """
+    cfg = load_config(CONFIG_PATH)
+    if not cfg.database.url:
+        raise HTTPException(500, "database.url is not configured")
+    if not db.schema_ready(cfg.database):
+        raise HTTPException(503, "Database schema not initialized. Call POST /init-db first.")
+
+    job = db.fetch_job(cfg.database, job_id)
+    if job is None:
+        raise HTTPException(404, f"Job {job_id} not found")
+
+    profile_path = PROFILES_DIR / f"{job.profile}.yaml"
+    if not profile_path.exists():
+        raise HTTPException(404, f"Profile '{job.profile}' not found")
+    profile = load_profile(profile_path)
+
+    try:
+        send_job_to_profile(profile, job)
+    except TelegramSendError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    return {"status": "sent", "profile": profile.name}
 
 
 @app.post("/init-db")

@@ -1,6 +1,7 @@
 // Mirrors JobOut from job-search-automation's API (see ../job-search-automation/src/job_search/api.py)
 interface Job {
   id: number;
+  profile: string;
   source: string;
   title: string;
   company: string;

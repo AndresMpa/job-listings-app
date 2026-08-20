@@ -22,12 +22,27 @@ from pathlib import Path
 
 import requests
 
+from typing import Protocol
+
 from .config import ProfileConfig
 from .models import JobListing
 
 TELEGRAM_API_BASE = "https://api.telegram.org"
 MAX_MESSAGE_LEN = 4096  # Telegram's hard limit per sendMessage call
 SUMMARY_JOB_LIMIT = 10  # how many jobs to list inline before pointing at the file
+
+
+class _JobLike(Protocol):
+    """Structural type covering both JobListing and db.JobRecord — the single-job
+    send path is used from the API against rows read back from Postgres, which
+    aren't JobListing instances but share the same field names."""
+
+    url: str
+    salary: str | None
+    location: str
+    reasoning: str | None
+    tags: list[str]
+    score: int | None
 
 
 def _bot_token() -> str | None:
@@ -44,6 +59,72 @@ def _build_summary(profile: ProfileConfig, jobs: list[JobListing]) -> str:
     if len(jobs) > SUMMARY_JOB_LIMIT:
         lines.append(f"\n…and {len(jobs) - SUMMARY_JOB_LIMIT} more in the attached report.")
     return "\n\n".join(lines)[:MAX_MESSAGE_LEN]
+
+
+def _build_job_message(job: _JobLike) -> str:
+    """Single-offer message, in the fixed format the UI's "send to Telegram"
+    button always uses:
+
+        Link; LINK
+        Salary: SALARY
+
+        Country/Remote: COUNTRY/REMOTE
+        Why it matches: CARD_DESCRIPTION
+
+        Skill needed: SKILLS []
+        Matched percentage N/10
+    """
+    salary = job.salary or "Not specified"
+    location = job.location or "Remote"
+    why_it_matches = job.reasoning or "-"
+    skills = ", ".join(job.tags) if job.tags else "-"
+    score = job.score if job.score is not None else "-"
+    return (
+        f"Link; {job.url}\n"
+        f"Salary: {salary}\n\n"
+        f"Country/Remote: {location}\n"
+        f"Why it matches: {why_it_matches}\n\n"
+        f"Skill needed: [{skills}]\n"
+        f"Matched percentage {score}/10"
+    )[:MAX_MESSAGE_LEN]
+
+
+class TelegramSendError(Exception):
+    """Raised when a single-offer send can't go out — reason is user-facing
+    (e.g. surfaced as an HTTP 400/502 by the API), unlike the digest sender's
+    silent no-ops, since this is a direct button click that needs feedback."""
+
+
+def send_job_to_profile(profile: ProfileConfig, job: _JobLike) -> None:
+    """Sends one job offer to `profile`'s own Telegram chat — the only path the
+    UI uses to deliver an offer, so each profile's owner only ever gets that
+    profile's offers, in their own chat.
+
+    Raises TelegramSendError with a user-facing reason instead of returning a
+    bool, since a manual button click needs to explain a failure, not just log it.
+    """
+    if not profile.telegram.enabled:
+        raise TelegramSendError(f"Telegram isn't enabled for profile '{profile.name}'")
+    if not profile.telegram.chat_id:
+        raise TelegramSendError(f"Profile '{profile.name}' has no Telegram chat_id configured")
+    token = _bot_token()
+    if not token:
+        raise TelegramSendError("TELEGRAM_BOT_TOKEN is not set")
+
+    base = f"{TELEGRAM_API_BASE}/bot{token}"
+    try:
+        resp = requests.post(
+            f"{base}/sendMessage",
+            data={
+                "chat_id": profile.telegram.chat_id,
+                "text": _build_job_message(job),
+                "disable_web_page_preview": True,
+            },
+            timeout=30,
+        )
+        resp.raise_for_status()
+    except requests.RequestException as exc:
+        raise TelegramSendError(f"Telegram API request failed: {exc}") from exc
 
 
 def send_profile_digest(profile: ProfileConfig, jobs: list[JobListing], md_path: Path) -> bool:

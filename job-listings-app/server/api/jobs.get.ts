@@ -4,6 +4,7 @@ import type { ApiFetchError, Job } from "@/lib/types";
 
 interface BackendJob {
   id: number;
+  profile: string;
   source: string;
   title: string;
   company: string;
@@ -23,6 +24,7 @@ interface BackendJob {
 function toJob(j: BackendJob): Job {
   return {
     id: j.id,
+    profile: j.profile,
     source: j.source,
     title: j.title,
     company: j.company,

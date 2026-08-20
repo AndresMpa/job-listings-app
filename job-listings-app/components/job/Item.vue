@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { Send } from "lucide-vue-next";
 import { computed, ref } from "vue";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Job } from "@/lib/types";
+import type { ApiFetchError, Job } from "@/lib/types";
 
 const props = defineProps<{
   job: Job;
@@ -11,6 +12,28 @@ const props = defineProps<{
 }>();
 
 defineEmits<{ addTag: [tag: string] }>();
+
+// Sending an offer to Telegram: this button is the only place in the UI that
+// triggers it, and the backend routes it to whichever profile owns the job
+// (job.profile) — never a chat picked here — so each profile's owner only
+// ever gets their own offers.
+const sendState = ref<"idle" | "sending" | "sent" | "error">("idle");
+const sendErrorMessage = ref("");
+
+async function sendToTelegram() {
+  if (sendState.value === "sending") return;
+  sendState.value = "sending";
+  sendErrorMessage.value = "";
+  try {
+    await $fetch(`/api/jobs/${props.job.id}/send-telegram`, { method: "POST" });
+    sendState.value = "sent";
+  } catch (err) {
+    const error = err as ApiFetchError;
+    sendErrorMessage.value =
+      error?.data?.statusMessage ?? "Could not send this offer to Telegram";
+    sendState.value = "error";
+  }
+}
 
 const initials = computed(
   () =>
@@ -97,6 +120,29 @@ const showOutreach = ref(false);
           >
             {{ job.outreachDraft }}
           </p>
+
+          <div class="flex items-center gap-2 mt-3">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              class="rounded border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-60"
+              :disabled="sendState === 'sending' || sendState === 'sent'"
+              @click="sendToTelegram"
+            >
+              <Send class="h-4 w-4" />
+              {{
+                sendState === "sending"
+                  ? "Sending…"
+                  : sendState === "sent"
+                    ? "Sent to Telegram"
+                    : "Send to Telegram"
+              }}
+            </Button>
+            <p v-if="sendState === 'error'" class="text-sm text-destructive">
+              {{ sendErrorMessage }}
+            </p>
+          </div>
         </div>
 
         <div

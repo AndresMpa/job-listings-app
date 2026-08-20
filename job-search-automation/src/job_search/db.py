@@ -114,6 +114,14 @@ def save_jobs(jobs: list[JobListing], db_cfg: DatabaseConfig, profile: str = "de
     return len(jobs)
 
 
+def fetch_job(db_cfg: DatabaseConfig, job_id: int) -> JobRecord | None:
+    """Fetch a single job by its primary key, or None if it doesn't exist."""
+    engine = get_engine(db_cfg)
+    session_factory = sessionmaker(bind=engine)
+    with session_factory() as session:  # type: Session
+        return session.get(JobRecord, job_id)
+
+
 def fetch_jobs(
     db_cfg: DatabaseConfig,
     profile: str | None = None,
