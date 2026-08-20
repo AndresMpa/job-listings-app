@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { computed, ref } from "vue";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Job } from "@/lib/types";
-import { computed, ref } from "vue";
 
 const props = defineProps<{
   job: Job;
@@ -12,13 +12,14 @@ const props = defineProps<{
 
 defineEmits<{ addTag: [tag: string] }>();
 
-const initials = computed(() =>
-  props.job.company
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase())
-    .join("") || "?"
+const initials = computed(
+  () =>
+    props.job.company
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase())
+      .join("") || "?",
 );
 
 const scoreTier = computed(() => {

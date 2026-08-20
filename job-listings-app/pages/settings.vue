@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FetchError } from "ofetch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { AppSettings, ProfileSettings } from "@/lib/types";
@@ -7,7 +8,8 @@ definePageMeta({
   layout: "simple",
 });
 
-const { data: settings, refresh } = await useFetch<AppSettings>("/api/settings");
+const { data: settings, refresh } =
+  await useFetch<AppSettings>("/api/settings");
 // Candidate profiles (who's being searched for) now live in their own
 // profiles/<name>.yaml files, managed via the job-search-automation API
 // directly (GET/PUT/DELETE /profiles/{name}). This page just lists them
@@ -68,7 +70,11 @@ async function save() {
   saveOk.value = false;
 
   const payload: AppSettings = {
-    ollama: { url: form.ollamaUrl, model: form.ollamaModel, timeout: form.ollamaTimeout },
+    ollama: {
+      url: form.ollamaUrl,
+      model: form.ollamaModel,
+      timeout: form.ollamaTimeout,
+    },
     providers: { ...form.providers },
     weworkremotely: { categories: fromLines(form.wwrCategories) },
     scoring: {
@@ -84,8 +90,9 @@ async function save() {
     await $fetch("/api/settings", { method: "PUT", body: payload });
     saveOk.value = true;
     await refresh();
-  } catch (err: any) {
-    saveError.value = err?.data?.statusMessage || "Could not save settings";
+  } catch (err) {
+    const error = err as FetchError;
+    saveError.value = error?.data?.statusMessage || "Could not save settings";
   } finally {
     saving.value = false;
   }

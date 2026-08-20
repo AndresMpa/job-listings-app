@@ -41,8 +41,15 @@ export function useJobsFeed(profile: Ref<string> | ComputedRef<string>) {
   }
 
   return {
-    data, error, refresh, schemaMissing,
-    initializing, initError, initDatabase,
-    running, runError, startSearch,
+    data,
+    error,
+    refresh,
+    schemaMissing,
+    initializing,
+    initError,
+    initDatabase,
+    running,
+    runError,
+    startSearch,
   };
 }

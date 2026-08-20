@@ -10,16 +10,13 @@ useHead({
 </script>
 
 <template>
-  <div class="bg-primary sm:bg-theme-desktop bg-theme-mobile">
-    <AppHoverMenu>
-      <h2>Navigation</h2>
-      <div class="flex flex-col justify-start gap-y-2">
-        <NuxtLink to="/" class="text-primary font-bold my-auto hover:underline">Home</NuxtLink>
-        <NuxtLink to="/jobs" class="text-primary font-bold my-auto hover:underline">Jobs</NuxtLink>
-        <NuxtLink to="/profiles" class="text-primary font-bold my-auto hover:underline">Profiles</NuxtLink>
-        <NuxtLink to="/settings" class="text-primary font-bold my-auto hover:underline">Settings</NuxtLink>
-      </div>
-    </AppHoverMenu>
-    <slot />
-  </div>
+  <SidebarProvider class="min-h-svh">
+    <AppSidebar />
+    <SidebarInset>
+      <header class="flex h-14 items-center gap-2 border-b px-4">
+        <SidebarTrigger class="size-7 text-foreground hover:bg-accent hover:text-accent-foreground" />
+      </header>
+      <slot />
+    </SidebarInset>
+  </SidebarProvider>
 </template>

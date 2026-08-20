@@ -1,13 +1,13 @@
 <script setup lang="ts">
+import { Icon } from "@iconify/vue";
+import { useI18n } from "vue-i18n";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Icon } from "@iconify/vue";
-import { useI18n } from "vue-i18n";
 
 const { locale, t } = useI18n();
 

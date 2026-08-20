@@ -1,4 +1,5 @@
 // Proxies to job-search-automation's PUT /config.
+import type { FetchError } from "ofetch";
 import type { AppSettings } from "@/lib/types";
 
 export default defineEventHandler(async (event) => {
@@ -10,10 +11,12 @@ export default defineEventHandler(async (event) => {
       method: "PUT",
       body,
     });
-  } catch (err: any) {
+  } catch (err) {
+    const error = err as FetchError;
     throw createError({
-      statusCode: err?.response?.status || 502,
-      statusMessage: err?.response?._data?.detail || "Could not save settings",
+      statusCode: error?.response?.status || 502,
+      statusMessage:
+        error?.response?._data?.detail || "Could not save settings",
       cause: err,
     });
   }

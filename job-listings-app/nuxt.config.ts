@@ -12,19 +12,19 @@ export default defineNuxtConfig({
 
   components: [
     {
-      path: '~/components/ui',
+      path: "~/components/ui",
       pathPrefix: false,
-      pattern: '**/*.vue',
+      pattern: "**/*.vue",
     },
     {
-      path: '~/components',
+      path: "~/components",
       pathPrefix: true,
     },
   ],
 
   shadcn: {
-    prefix: '',
-    componentDir: './components/ui'
+    prefix: "",
+    componentDir: "./components/ui",
   },
 
   i18n: {

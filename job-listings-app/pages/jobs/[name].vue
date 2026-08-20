@@ -9,30 +9,28 @@ const route = useRoute();
 const profileName = computed(() => route.params.name as string);
 
 const {
-  data, schemaMissing, initializing, initError, initDatabase,
-  running, runError, startSearch,
+  data,
+  schemaMissing,
+  initializing,
+  initError,
+  initDatabase,
+  running,
+  runError,
+  startSearch,
 } = useJobsFeed(profileName);
 
 const selectedTags = ref<string[]>([]);
 const handleTag = (tag: string) => {
   const index = selectedTags.value.indexOf(tag);
-  index === -1 ? selectedTags.value.push(tag) : selectedTags.value.splice(index, 1);
+  index === -1
+    ? selectedTags.value.push(tag)
+    : selectedTags.value.splice(index, 1);
 };
 const clearTags = () => (selectedTags.value = []);
 </script>
 
 <template>
   <div class="relative h-40 pt-32">
-    <div class="absolute left-4 top-4 z-10">
-      <NuxtLink to="/profiles" class="text-sm text-primary-foreground hover:underline">
-        ← All profiles
-      </NuxtLink>
-    </div>
-
-    <h1 class="absolute right-4 top-4 z-10 text-lg font-semibold text-primary-foreground">
-      {{ profileName }}
-    </h1>
-
     <div v-if="selectedTags.length !== 0" class="transition-opacity duration-500 ease-in-out">
       <JobFilter @remove-tag="handleTag" @clear-tags="clearTags" :selected-tags="selectedTags" />
     </div>

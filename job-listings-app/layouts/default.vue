@@ -1,9 +1,7 @@
 <script setup lang="ts">
 useHead({
   titleTemplate: "Job Listing App %s",
-  meta: [
-    { name: "description", content: "Simple job listing app" },
-  ],
+  meta: [{ name: "description", content: "Simple job listing app" }],
   htmlAttrs: {
     lang: "en",
   },

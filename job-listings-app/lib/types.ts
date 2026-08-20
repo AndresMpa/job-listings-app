@@ -71,4 +71,4 @@ interface ProfileSettings {
   };
 }
 
-export type { Job, AppSettings, ProfileSettings };
+export type { AppSettings, Job, ProfileSettings };

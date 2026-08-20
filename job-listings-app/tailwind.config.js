@@ -92,7 +92,7 @@ module.exports = {
     },
   },
   plugins: [
-    plugin(function ({ addUtilities }) {
+    plugin(({ addUtilities }) => {
       addUtilities({
         ".bg-theme-desktop": {
           backgroundImage: "var(--bg-desktop-picture)",

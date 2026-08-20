@@ -10,14 +10,22 @@ const { data: profiles } = await useFetch<ProfileSettings[]>("/api/profiles");
 const selectedProfile = ref<string>("");
 
 const {
-  data, schemaMissing, initializing, initError, initDatabase,
-  running, runError, startSearch,
+  data,
+  schemaMissing,
+  initializing,
+  initError,
+  initDatabase,
+  running,
+  runError,
+  startSearch,
 } = useJobsFeed(selectedProfile);
 
 const selectedTags = ref<string[]>([]);
 const handleTag = (tag: string) => {
   const index = selectedTags.value.indexOf(tag);
-  index === -1 ? selectedTags.value.push(tag) : selectedTags.value.splice(index, 1);
+  index === -1
+    ? selectedTags.value.push(tag)
+    : selectedTags.value.splice(index, 1);
 };
 const clearTags = () => (selectedTags.value = []);
 </script>

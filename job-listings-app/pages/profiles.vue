@@ -14,7 +14,7 @@ function initials(name: string) {
     .split(/[\s._-]+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map((s) => s[0]!.toUpperCase())
+    .map((s) => s[0]?.toUpperCase())
     .join("");
 }
 </script>
