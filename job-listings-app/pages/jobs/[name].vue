@@ -30,7 +30,7 @@ const clearTags = () => (selectedTags.value = []);
 </script>
 
 <template>
-  <div class="relative h-40 pt-32">
+  <div class="relative h-40">
     <div v-if="selectedTags.length !== 0" class="transition-opacity duration-500 ease-in-out">
       <JobFilter @remove-tag="handleTag" @clear-tags="clearTags" :selected-tags="selectedTags" />
     </div>

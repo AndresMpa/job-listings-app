@@ -20,7 +20,7 @@ function initials(name: string) {
 </script>
 
 <template>
-  <div class="relative pt-32 pb-20 max-w-5xl mx-auto px-4">
+  <div class="relative pb-20 max-w-5xl mx-auto px-4">
     <h1 class="text-3xl font-bold text-primary-foreground mb-8">Profiles</h1>
 
     <div v-if="!profiles" class="text-primary-foreground">Loading profiles…</div>

@@ -4,6 +4,21 @@ import { Button } from "@/components/ui/button";
 definePageMeta({
   layout: "simple",
 });
+
+const items = [
+  {
+    title: 'Profiles',
+    url: '/Profiles',
+  },
+  {
+    title: 'Jobs',
+    url: '/jobs',
+  },
+  {
+    title: 'Settings',
+    url: '/settings',
+  },
+]
 </script>
 
 <template>
@@ -13,9 +28,11 @@ definePageMeta({
       Fetches, scores, and reports job listings across multiple sources — one search per candidate profile.
     </p>
     <div class="flex flex-wrap justify-center gap-4">
-      <NuxtLink to="/profiles"><Button size="lg">Profiles</Button></NuxtLink>
-      <NuxtLink to="/jobs"><Button size="lg" variant="secondary">All jobs</Button></NuxtLink>
-      <NuxtLink to="/settings"><Button size="lg" variant="secondary">Settings</Button></NuxtLink>
+      <span v-for="item in items" :key="item.title">
+        <NuxtLink :to="item.url" class="text-primary font-bold my-auto hover:underline">
+          <Button size="lg" variant="secondary">{{ item.title }}</Button>
+        </NuxtLink>
+      </span>
     </div>
   </div>
 </template>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Home, Inbox, Search, Settings } from '@lucide/vue'
 import {
   Sidebar,
   SidebarContent,
@@ -13,47 +14,63 @@ import {
 
 const route = useRoute();
 const profileName = computed(() => route.params.name as string);
+const items = [
+  {
+    title: 'Home',
+    url: '/',
+    icon: Home,
+  },
+  {
+    title: 'Jobs',
+    url: '/jobs',
+    icon: Inbox,
+  },
+  {
+    title: 'Profiles',
+    url: '/Profiles',
+    icon: Search,
+  },
+  {
+    title: 'Settings',
+    url: '/settings',
+    icon: Settings,
+  },
+]
 </script>
-
 <template>
-  <Sidebar>
-    <SidebarHeader>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton size="lg" as-child>
-
-
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
-    </SidebarHeader>
-
+  <Sidebar side="right" class="bg-primary-foreground text-foreground">
     <SidebarContent>
       <SidebarGroup>
+        <SidebarGroupLabel>Application</SidebarGroupLabel>
         <SidebarGroupContent>
-        <UtilLanguageSwitcher />
-        <UtilThemeSwitcher />
+          <SidebarMenu>
+            <SidebarMenuItem v-for="item in items" :key="item.title">
+              <SidebarMenuButton as-child>
+                <NuxtLink :to="item.url" class="text-primary font-bold my-auto hover:underline">
+                  <component :is="item.icon" />
+                  <span>{{ item.title }}</span>
+                </NuxtLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
       <SidebarGroup>
+        <SidebarGroupLabel>Tools</SidebarGroupLabel>
         <SidebarGroupContent>
-        
-          <slot />
-        <div class="flex flex-col justify-start gap-y-2">
-        <NuxtLink to="/" class="text-primary font-bold my-auto hover:underline">Home</NuxtLink>
-        <NuxtLink to="/jobs" class="text-primary font-bold my-auto hover:underline">Jobs</NuxtLink>
-        <NuxtLink to="/profiles" class="text-primary font-bold my-auto hover:underline">Profiles</NuxtLink>
-        <NuxtLink to="/settings" class="text-primary font-bold my-auto hover:underline">Settings</NuxtLink>
-      </div>
+          <SidebarMenu>
+            <SidebarMenuItem class="flex justify-center">
+              <UtilLanguageSwitcher />
+            </SidebarMenuItem>
+            <SidebarMenuItem class="flex justify-center">
+              <UtilThemeSwitcher />
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
     </SidebarContent>
-
     <SidebarFooter>
-
-            <NuxtLink to="/profiles">
-              <span class="font-semibold">{{ profileName }}</span>
-            </NuxtLink>
+      <span v-show="profileName">{{profileName}}</span>
     </SidebarFooter>
   </Sidebar>
 </template>

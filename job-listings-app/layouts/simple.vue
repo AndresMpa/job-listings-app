@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+
 useHead({
   titleTemplate: "Job Listing App %s",
   meta: [{ name: "description", content: "Simple job listing app" }],
@@ -7,16 +9,16 @@ useHead({
   },
   link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
 });
+
+const open = ref(false)
 </script>
 
 <template>
-  <SidebarProvider class="min-h-svh">
+  <SidebarProvider :open="open" @update:open="open = $event">
     <AppSidebar />
-    <SidebarInset>
-      <header class="flex h-14 items-center gap-2 border-b px-4">
-        <SidebarTrigger class="size-7 text-foreground hover:bg-accent hover:text-accent-foreground" />
-      </header>
+    <main class="mx-auto w-screen bg-primary sm:bg-theme-desktop bg-theme-mobile">
+      <SidebarTrigger class="rounded text-primary-foreground"/>
       <slot />
-    </SidebarInset>
+    </main>
   </SidebarProvider>
 </template>

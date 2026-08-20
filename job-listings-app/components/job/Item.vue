@@ -73,13 +73,13 @@ const showOutreach = ref(false);
             </h2>
           </a>
 
-          <p class="text-gray-500 text-lg font-extralight">
+          <p class="text-lg font-extralight">
             <span v-if="job.salary">{{ job.salary }}</span>
             <span v-if="job.salary" class="mx-2">-</span>
             <span>{{ job.location || "Remote" }}</span>
           </p>
 
-          <p v-if="job.reasoning" class="text-gray-500 text-sm mt-2 max-w-2xl">
+          <p v-if="job.reasoning" class="text-sm mt-2 max-w-2xl">
             {{ job.reasoning }}
           </p>
 
@@ -93,7 +93,7 @@ const showOutreach = ref(false);
           </button>
           <p
             v-if="showOutreach && job.outreachDraft"
-            class="text-gray-500 text-sm mt-2 max-w-2xl whitespace-pre-line border-l-2 border-primary pl-3"
+            class="text-sm mt-2 max-w-2xl whitespace-pre-line border-l-2 border-primary pl-3"
           >
             {{ job.outreachDraft }}
           </p>
